@@ -5,6 +5,11 @@
     <title>Item App</title>
 </head>
 <body>
-    <h1>Product list</h1>
+    <h1>Avaliable categories</h1>
+    <ul>
+    {% for category in categories %}
+        <li>{{ category.name }}</li>
+    {% endfor %}
+    </ul>
 </body>
 </html>
