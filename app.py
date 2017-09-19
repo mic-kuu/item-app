@@ -14,7 +14,7 @@ session = DBSession()
 
 
 @app.route('/')
-def mainView(restaurant_id):
+def mainView():
     return render_template('main.html')
 
 
