@@ -16,3 +16,9 @@ session = DBSession()
 @app.route('/')
 def mainView(restaurant_id):
     return render_template('main.html')
+
+
+if __name__ == "__main__":
+    app.secret_key = "this_is_my_secret"
+    app.debug = True
+    app.run(host = '0.0.0.0', port = 5000)
