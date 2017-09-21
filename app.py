@@ -14,10 +14,12 @@ session = DBSession()
 
 
 @app.route('/')
-def mainView():
+@app.route('/category/<int:category_id>')
+def mainView(category_id=1):
     categories = session.query(Category).all()
+    items = session.query(Item).filter_by(category_id=category_id).all()
 
-    return render_template('main.html', categories=categories)
+    return render_template('main.html', categories=categories, items=items, category_id=category_id)
 
 # A simple endpoint prepared for development purposes
 @app.route('/add/<string:name>/')

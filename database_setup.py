@@ -30,7 +30,6 @@ class Item(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(80), nullable=False)
     price = Column(String(8))
-    last_modified = Column(DateTime)
     picture = Column(String(250))
 
     category_id = Column(Integer, ForeignKey('category.id'))
