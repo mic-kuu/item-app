@@ -14,20 +14,21 @@ session = DBSession()
 
 
 @app.route('/')
-@app.route('/category/<int:category_id>')
+@app.route('/category/<int:category_id>/')
 def mainView(category_id=1):
     categories = session.query(Category).all()
     items = session.query(Item).filter_by(category_id=category_id).all()
 
     return render_template('main.html', categories=categories, items=items, category_id=category_id)
 
-# A simple endpoint prepared for development purposes
-@app.route('/add/<string:name>/')
-def addCategory(name):
-        new_category = Category(name = name)
-        session.add(new_category)
-        session.commit()
-        return redirect(url_for("mainView"))
+@app.route('/category/add/')
+def addCategory():
+    return render_template('add_category.html')
+
+@app.route('/category/<int:category_id>/add/')
+def addItem(category_id):
+    category = session.query(Category).filter_by(id=category_id).one()
+    return render_template('add_item.html', category=category)
 
 if __name__ == "__main__":
     app.secret_key = "this_is_my_secret"
