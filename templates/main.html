@@ -13,32 +13,69 @@
 
 </head>
 <body>
-    <h1>Avaliable categories</h1>
-    <ul>
-    {% for category in categories %}
-        {% if category.id == category_id %}
-        {% endif %}
-        <li><a href="{{ url_for("mainView", category_id=category.id) }}">{{ category.name }}</a></li>
-    {% endfor %}
-    </ul>
+    <div class="ui main menu">
+      <div class="item">
+        <img src="{{ url_for("static", filename="logo.png") }}">
+      </div>
+      <a class="item">Features</a>
+      <a class="item">Testimonials</a>
+      <a class="item">Sign-in</a>
+    </div>
 
-    <h1>Chosen category:
+    <div class="ui grid">
+    <div class="row">
+        <div class="column">
+            <div id="maincontent" class="ui bottom attached segment pushable">
+                <div id="sidebar" class="ui visible left vertical sidebar menu">
+                    {% for category in categories %}
+                        {% if category.id == category_id %}
+                        {% endif %}
+                        <a class="item" href="{{ url_for("mainView", category_id=category.id) }}">{{ category.name }}</a>
+                    {% endfor %}
+                </div>
 
-    {% for category in categories %}
-        {% if category.id == category_id %}
-            {{ category.name }}
-        {% endif %}
-    {% endfor %}
+                  <div id="content" class="pusher">
+                      <div class="ui basic segment">
 
-    </h1>
-    <h2>Avaliable items:</h2>
-    <ul>
-    {% for item in items %}
-        <li>{{ item.name }}</li>
-    {% endfor %}
-    </ul>
+                            <h1>Chosen category:
 
-<p><a href="{{ url_for('addItem') }}">Add Item</a></p>
-<p><a href="{{ url_for('addCategory') }}">Add Category</a></p>
+                            {% for category in categories %}
+                                {% if category.id == category_id %}
+                                    {{ category.name }}
+                                {% endif %}
+                            {% endfor %}
+
+                            </h1>
+                            <h2>Avaliable items:</h2>
+                            <ul>
+                            {% for item in items %}
+                                <li>{{ item.name }}</li>
+                            {% endfor %}
+                            </ul>
+
+                            <p><a href="{{ url_for('addItem') }}">Add Item</a></p>
+                            <p><a href="{{ url_for('addCategory') }}">Add Category</a></p>
+
+
+
+
+
+                      </div>
+              </div>
+
+            </div>
+
+        </div>
+    </div>
+    </div>
+
+
+
+
+
+
+
+
+
 </body>
 </html>
