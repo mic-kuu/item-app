@@ -21,14 +21,30 @@ def mainView(category_id=1):
 
     return render_template('main.html', categories=categories, items=items, category_id=category_id)
 
-@app.route('/category/add/')
+@app.route('/add/category/')
 def addCategory():
     return render_template('add_category.html')
 
-@app.route('/category/<int:category_id>/add/')
-def addItem(category_id):
-    category = session.query(Category).filter_by(id=category_id).one()
-    return render_template('add_item.html', category=category)
+@app.route('/add/item/', methods=['GET', 'POST'])
+def addItem():
+    if request.method == 'POST':
+
+        new_item = Item(name=request.form['name'],
+                        price=request.form['price'],
+                        description=request.form['description'],
+                        category_id=request.form['category-id'])
+
+        session.add(new_item)
+        session.commit()
+
+        return redirect(url_for('mainView', category_id=request.form['category-id']))
+
+    else:
+        categories = session.query(Category).all()
+        return render_template('add_item.html', categories=categories)
+
+
+
 
 if __name__ == "__main__":
     app.secret_key = "this_is_my_secret"

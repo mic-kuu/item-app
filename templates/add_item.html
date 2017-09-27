@@ -3,10 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <title>Add item</title>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
+
 </head>
 <body>
 
-<h1>{{ category.name }}</h1>
+<h1>Add item</h1>
+    <form action="#" method="post">
+        <select name="category-id">
+            {% for category in categories %}
+            <option value="{{ category.id }}" >{{ category.name }}</option>
+        {% endfor %}
+        </select>
+
+        <label>Name</label>
+        <input type="text" required name="name">
+
+        <label>Price</label>
+        <input type="number" step="0.01" min="0" value="0" name="price">
+
+        <label>Description</label>
+        <input type="description" name="description">
+
+        <label>Picture</label>
+        <input type="image" name="picture">
+
+        <input type="submit" value="Add item">
+    </form>
+
+    <p><a href="{{ url_for('mainView') }}">Back to main View</a></p>
 
 </body>
 </html>
