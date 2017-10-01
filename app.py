@@ -32,7 +32,8 @@ def addCategory():
     return render_template('add_category.html')
 
 @app.route('/add/item/', methods=['GET', 'POST'])
-def addItem():
+@app.route('/add/item/<int:category_id>/', methods=['GET', 'POST'])
+def addItem(category_id=1):
     if request.method == 'POST':
 
         new_item = Item(name=request.form['name'],
@@ -47,7 +48,7 @@ def addItem():
 
     else:
         categories = session.query(Category).all()
-        return render_template('add_item.html', categories=categories)
+        return render_template('add_item.html', categories=categories, category_id=category_id)
 
 
 

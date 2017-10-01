@@ -14,30 +14,80 @@
 </head>
 <body>
 
-<h1>Add item</h1>
-    <form action="#" method="post">
-        <select name="category-id">
-            {% for category in categories %}
-            <option value="{{ category.id }}" >{{ category.name }}</option>
-        {% endfor %}
-        </select>
+    <div class="ui large main menu">
 
-        <label>Name</label>
-        <input type="text" required name="name">
+      <a href="{{ url_for("categoryView")}}" class="header item">
+        <img src="{{ url_for("static", filename="logo.png") }}">
+      </a>
 
-        <label>Price</label>
-        <input type="number" step="0.01" min="0" value="0" name="price">
 
-        <label>Description</label>
-        <input type="description" name="description">
 
-        <label>Picture</label>
-        <input type="image" name="picture">
+      <div class="right item">
 
-        <input type="submit" value="Add item">
-    </form>
+        <div class="content padded">
+          <div class="header">Welcome <strong>Magda</strong>!</div>
+          <div class="meta">
+            <span class="logout">Not you? <a href="#">Log out</a></span>
+          </div>
+        </div>
 
-    <p><a href="{{ url_for('categoryView') }}">Back to main View</a></p>
+        <div class="ui circular mini spaced image">
+          <img src="{{ url_for("static", filename="user.jpg") }}">
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="ui one column doubling stackable centered container">
+
+        <div class="ui clearing segment">
+        <div class="ui top attached label">Item definition</div>
+        <a class="ui red right ribbon label">New item</a>
+            <form action="#" method="post" class="ui form">
+                <div class="field">
+                    <label>Category</label>
+                    <select name="category-id" class="ui search dropdown">
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" >{{ category.name }}</option>
+                    {% endfor %}
+                    </select>
+                </div>
+                <div class="field required">
+                    <label>Name</label>
+                    <input type="text" required name="name">
+                </div>
+
+                <div class="field required">
+                    <label>Price</label>
+                    <input type="number" step="0.01" min="0" value="0" name="price" required>
+                </div>
+
+                <div class="field">
+                    <label>Description</label>
+                    <input type="text" name="description">
+
+                </div>
+
+                <div class="field">
+                    <label>Picture</label>
+                    <input type="image" name="picture">
+                </div>
+
+                <div class="field">
+                        <input type="submit" value="Add item" class="ui positive right floated button">
+                </div>
+
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+
+
 
 </body>
 </html>
