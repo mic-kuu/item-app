@@ -14,12 +14,18 @@ session = DBSession()
 
 
 @app.route('/')
-@app.route('/category/<int:category_id>/')
-def mainView(category_id=1):
+def categoryView():
     categories = session.query(Category).all()
+    return render_template('view_category.html', categories=categories)
+
+@app.route('/category/<int:category_id>/')
+def itemView(category_id):
+    category = session.query(Category).filter_by(id=category_id).one()
+
     items = session.query(Item).filter_by(category_id=category_id).all()
 
-    return render_template('main.html', categories=categories, items=items, category_id=category_id)
+    return render_template('view_item.html', category=category, items=items)
+
 
 @app.route('/add/category/')
 def addCategory():
@@ -37,7 +43,7 @@ def addItem():
         session.add(new_item)
         session.commit()
 
-        return redirect(url_for('mainView', category_id=request.form['category-id']))
+        return redirect(url_for('categoryView', category_id=request.form['category-id']))
 
     else:
         categories = session.query(Category).all()

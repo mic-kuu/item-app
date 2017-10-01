@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Item App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.min.js"
+      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+      crossorigin="anonymous">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
+
+<body>
+
+    <div class="ui large main menu">
+    <a href="{{ url_for("categoryView")}}" class="header item">
+        <img src="{{ url_for("static", filename="logo.png") }}">
+    </a>
+
+
+      <div class="right item">
+
+        <div class="content padded">
+          <div class="header">Welcome <strong>Magda</strong>!</div>
+          <div class="meta">
+            <span class="logut">Not you? <a href="#">Log out</a></span>
+          </div>
+        </div>
+
+        <div class="ui circular mini spaced image">
+          <img src="{{ url_for("static", filename="user.jpg") }}">
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="ui three column doubling stackable grid centered container">
+
+
+
+        {% for category in categories %}
+            <div class="column">
+                <a href="{{ url_for('itemView', category_id=category.id) }}" class="ui fluid card link">
+                 <div class="image">
+                   <img src="{{ url_for("static", filename="empty_img.png") }}">
+                 </div>
+                 <div class="content">
+                   <strong>{{ category.name }}</strong>
+                 </div>
+               </a>
+            </div>
+        {% endfor %}
+
+
+    </div>
+
+    <div class="ui centered grid">
+        <div class="ui compact huge menu stackable">
+          <a class="item">
+            <i class="write icon"></i>
+            Add Group
+          </a>
+          <a class="item">
+            <i class="edit icon"></i>
+            Edit Group
+          </a>
+          <a class="item">
+            <i class="erase icon"></i>
+            Delete Group
+          </a>
+        </div>
+      </div>
+
+
+
+</body>
+</html>
