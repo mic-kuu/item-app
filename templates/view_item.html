@@ -67,7 +67,7 @@
                   </div>
                   <div class="extra">
 
-                      <div class="ui negative right floated button">
+                      <div class="ui negative right floated button delete">
                         Delete
                       </div>
 
@@ -83,6 +83,34 @@
         </div>
 
     </div>
+
+    <div class="ui basic modal">
+      <div class="ui icon header">
+        <i class="warning circle icon"></i>
+        Delete item
+      </div>
+      <div class="content">
+        <p>You're about to delete an item named: PLACEHOLDER. Are you sure?</p>
+      </div>
+      <div class="actions">
+        <div class="ui basic cancel inverted button">
+          <i class="remove icon"></i>
+          No
+        </div>
+        <div class="ui red ok inverted button">
+          <i class="checkmark icon"></i>
+          Yes
+        </div>
+      </div>
+    </div>
+
+<script>
+
+$('.button.delete').click(function () {
+    $('.ui.basic.modal').modal('show');
+})
+
+</script>
 
 </body>
 </html>
