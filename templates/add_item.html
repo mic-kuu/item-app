@@ -14,30 +14,55 @@
 </head>
 <body>
 
-    <div class="ui large main menu">
+<div class="ui large main menu">
 
-      <a href="{{ url_for("categoryView")}}" class="header item">
+    <a href="{{ url_for("categoryView") }}" class="header item">
         <img src="{{ url_for("static", filename="logo.png") }}">
-      </a>
+    </a>
 
 
+    <div class="right menu">
 
-      <div class="right item">
-
-        <div class="content padded">
-          <div class="header">Welcome <strong>Magda</strong>!</div>
-          <div class="meta">
-            <span class="logout">Not you? <a href="#">Log out</a></span>
-          </div>
+        <div class="ui dropdown item">
+            <i class="wrench icon"></i>
+            Actions
+            <div class="menu">
+                <div class="item">
+                    Add item
+                </div>
+                <div class="item">
+                    Add category
+                </div>
+                <div class="item">
+                    Main menu
+                </div>
+                <div class="item">
+                    Info
+                </div>
+            </div>
         </div>
 
-        <div class="ui circular mini spaced image">
-          <img src="{{ url_for("static", filename="user.jpg") }}">
+        <div class="item">
+
+
+            <div class="content padded">
+                <div class="header">Welcome <strong>Magda</strong>!</div>
+                <div class="meta">
+                    <span class="logout">Not you? <a href="#">Log out</a></span>
+                </div>
+            </div>
+
+            <div class="ui circular mini spaced image">
+                <img src="{{ url_for("static", filename="user.jpg") }}">
+            </div>
+
         </div>
 
-      </div>
 
     </div>
+
+
+</div>
 
 
     <div class="ui one column doubling stackable centered container">
@@ -79,14 +104,15 @@
                         <input type="submit" value="Add item" class="ui positive right floated button">
                 </div>
 
-
-                </div>
             </form>
 
         </div>
     </div>
 
-
+<script>
+    $('.ui.dropdown')
+    .dropdown();
+</script>
 
 
 </body>

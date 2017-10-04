@@ -5,138 +5,164 @@
     <title>Item App</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
     <script
-      src="https://code.jquery.com/jquery-3.2.1.min.js"
-      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-      crossorigin="anonymous">
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
 </head>
 <body>
 
-    <div class="ui large main menu">
+<div class="ui large main menu">
 
-      <a href="{{ url_for("categoryView")}}" class="header item">
+    <a href="{{ url_for("categoryView") }}" class="header item">
         <img src="{{ url_for("static", filename="logo.png") }}">
-      </a>
+    </a>
 
 
+    <div class="right menu">
 
-      <div class="right item">
-
-        <div class="content padded">
-          <div class="header">Welcome <strong>Magda</strong>!</div>
-          <div class="meta">
-            <span class="logout">Not you? <a href="#">Log out</a></span>
-          </div>
-        </div>
-
-        <div class="ui circular mini spaced image">
-          <img src="{{ url_for("static", filename="user.jpg") }}">
-        </div>
-
-      </div>
-
-    </div>
-
-    <div class="ui one column doubling stackable centered container">
-
-        <div class="ui segment">
-            <h1 id="c-{{ category.id }}" class="category-id">{{ category.name }}</h1>
-            <p>Description: {{ category.description }}</p>
-            <p>Item count: 1</p>
-        </div>
-
-
-        <div class="ui divided items relaxed">
-            {% for item in items %}
-
-            <div class="item column">
-                <div class="image">
-                  <img src="{{ url_for("static", filename="empty_img.png") }}">
+        <div class="ui dropdown item">
+            <i class="wrench icon"></i>
+            Actions
+            <div class="menu">
+                <div class="item">
+                    Add item
                 </div>
-                <div class="content">
-                  <a id="id-{{ item.id }}" class="header">
-                      <i class="like icon"></i>
-                      {{ item.name }}
-                  </a>
-                  <div class="meta">
-                    <span class="price">Price: {{ item.price }}</span>
-                  </div>
-                  <div class="description">
-                    <p>{{ item.description }}</p>
-                  </div>
-                  <div class="extra">
+                <div class="item">
+                    Add category
+                </div>
+                <div class="item">
+                    Main menu
+                </div>
+                <div class="item">
+                    Info
+                </div>
+            </div>
+        </div>
 
-                      <div class="ui negative right floated button delete">
-                        Delete
-                      </div>
+        <div class="item">
 
-                      <div class="ui positive right floated button">
-                        Edit
-                      </div>
 
-                  </div>
+            <div class="content padded">
+                <div class="header">Welcome <strong>Magda</strong>!</div>
+                <div class="meta">
+                    <span class="logout">Not you? <a href="#">Log out</a></span>
                 </div>
             </div>
 
-            {% endfor %}
+            <div class="ui circular mini spaced image">
+                <img src="{{ url_for("static", filename="user.jpg") }}">
+            </div>
+
         </div>
 
+
     </div>
+
+
+</div>
+
+<div class="ui one column doubling stackable centered container">
+
+    <div class="ui segment">
+        <h1 id="c-{{ category.id }}" class="category-id">{{ category.name }}</h1>
+        <p>Description: {{ category.description }}</p>
+        <p>Item count: 1</p>
+    </div>
+
+
+    <div class="ui divided items relaxed">
+        {% for item in items %}
+
+            <div class="item column">
+                <div class="image">
+                    <img src="{{ url_for("static", filename="empty_img.png") }}">
+                </div>
+                <div class="content">
+                    <a id="id-{{ item.id }}" class="header">
+                        <i class="like icon"></i>
+                        {{ item.name }}
+                    </a>
+                    <div class="meta">
+                        <span class="price">Price: {{ item.price }}</span>
+                    </div>
+                    <div class="description">
+                        <p>{{ item.description }}</p>
+                    </div>
+                    <div class="extra">
+
+                        <div class="ui negative right floated button delete">
+                            Delete
+                        </div>
+
+                        <div class="ui positive right floated button">
+                            Edit
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        {% endfor %}
+    </div>
+
+</div>
 
 <!--  Modal with confirmation before deleting an item. Dynamically modified by jQuery -->
-    <div class="ui basic modal">
-      <div class="ui icon header">
+<div class="ui basic modal">
+    <div class="ui icon header">
         <i class="warning circle icon"></i>
         Delete item
-      </div>
-      <div class="content">
+    </div>
+    <div class="content">
         <p class="modal-text"></p>
-      </div>
-      <div class="actions">
+    </div>
+    <div class="actions">
         <div class="ui basic cancel inverted button">
-          <i class="remove icon"></i>
-          No
+            <i class="remove icon"></i>
+            No
         </div>
         <div class="ui red ok inverted button">
-          <i class="checkmark icon"></i>
-          Yes
+            <i class="checkmark icon"></i>
+            Yes
         </div>
-      </div>
     </div>
+</div>
 
 <script>
 
+    $('.ui.dropdown')
+        .dropdown();
 
+    $('.button.delete').click(function () {
 
-$('.button.delete').click(function () {
+        // get name of item from the item that triggered the modal
+        const name = $(this).parents('.content')
+            .find('.header')
+            .text()
+            .trim();
 
-    // get name of item from the item that triggered the modal
-    const name = $(this).parents('.content')
-                        .find('.header')
-                        .text()
-                        .trim();
+        // get id of item stored in the DOM
+        const item_id = $(this).parents('.content')
+            .find('.header')
+            .attr('id')
+            .replace(/^\D+/g, '');
 
-    // get id of item stored in the DOM
-    const item_id = $(this).parents('.content')
-                        .find('.header')
-                        .attr('id')
-                        .replace( /^\D+/g, '');
+        // get id of active category
+        const category_id = $('.category-id')
+            .attr('id')
+            .replace(/^\D+/g, '');
 
-    // get id of active category
-    const category_id = $('.category-id')
-                        .attr('id')
-                        .replace( /^\D+/g, '');
+        // assign new behaviour to delete button on modal - specify category and item to be deleted
+        $('.ui.red.ok.inverted.button').click(function () {
+            location.href = `http://${document.location.host}/category/${category_id}/item/${item_id}/delete/`;
+        });
 
-    // assign new behaviour to delete button on modal - specify category and item to be deleted
-    $('.ui.red.ok.inverted.button').click(function () {
-        location.href = `http://${document.location.host}/category/${category_id}/item/${item_id}/delete/`;
-    });
-
-    // modify text to correspond selected item
-    $('.modal-text').text(`You're about to delete an item named: "${name}".Are you sure?`);
-    $('.ui.basic.modal').modal('show');
-})
+        // modify text to correspond selected item
+        $('.modal-text').text(`You're about to delete an item named: "${name}".Are you sure?`);
+        $('.ui.basic.modal').modal('show');
+    })
 
 </script>
 
