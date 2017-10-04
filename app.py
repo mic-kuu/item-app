@@ -51,6 +51,15 @@ def addItem(category_id=1):
         return render_template('add_item.html', categories=categories, category_id=category_id)
 
 
+@app.route('/category/<int:category>/item/<int:item>/delete/')
+def deleteItem(category, item):
+
+    # TODO: Add handling on nonexisting item delete
+    item = session.query(Item).filter_by(id=item, category_id=category).one()
+    session.delete(item)
+    session.commit()
+
+    return redirect(url_for('itemView', category_id=category))
 
 
 if __name__ == "__main__":

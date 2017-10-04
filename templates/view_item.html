@@ -41,7 +41,7 @@
     <div class="ui one column doubling stackable centered container">
 
         <div class="ui segment">
-            <h1>{{ category.name }}</h1>
+            <h1 id="c-{{ category.id }}" class="category-id">{{ category.name }}</h1>
             <p>Description: {{ category.description }}</p>
             <p>Item count: 1</p>
         </div>
@@ -55,7 +55,7 @@
                   <img src="{{ url_for("static", filename="empty_img.png") }}">
                 </div>
                 <div class="content">
-                  <a class="header">
+                  <a id="id-{{ item.id }}" class="header">
                       <i class="like icon"></i>
                       {{ item.name }}
                   </a>
@@ -84,13 +84,14 @@
 
     </div>
 
+<!--  Modal with confirmation before deleting an item. Dynamically modified by jQuery -->
     <div class="ui basic modal">
       <div class="ui icon header">
         <i class="warning circle icon"></i>
         Delete item
       </div>
       <div class="content">
-        <p>You're about to delete an item named: PLACEHOLDER. Are you sure?</p>
+        <p class="modal-text"></p>
       </div>
       <div class="actions">
         <div class="ui basic cancel inverted button">
@@ -106,7 +107,34 @@
 
 <script>
 
+
+
 $('.button.delete').click(function () {
+
+    // get name of item from the item that triggered the modal
+    const name = $(this).parents('.content')
+                        .find('.header')
+                        .text()
+                        .trim();
+
+    // get id of item stored in the DOM
+    const item_id = $(this).parents('.content')
+                        .find('.header')
+                        .attr('id')
+                        .replace( /^\D+/g, '');
+
+    // get id of active category
+    const category_id = $('.category-id')
+                        .attr('id')
+                        .replace( /^\D+/g, '');
+
+    // assign new behaviour to delete button on modal - specify category and item to be deleted
+    $('.ui.red.ok.inverted.button').click(function () {
+        location.href = `http://${document.location.host}/category/${category_id}/item/${item_id}/delete/`;
+    });
+
+    // modify text to correspond selected item
+    $('.modal-text').text(`You're about to delete an item named: "${name}".Are you sure?`);
     $('.ui.basic.modal').modal('show');
 })
 
