@@ -27,15 +27,15 @@
             <i class="wrench icon"></i>
             Actions
             <div class="menu">
-                <div class="item">
-                    Add item
-                </div>
+
+                <a href="{{ url_for("addItem") }}" class="item">Add item</a>
+
                 <div class="item">
                     Add category
                 </div>
-                <div class="item">
-                    Main menu
-                </div>
+
+                <a href="{{ url_for("categoryView") }}" class="item">Main menu</a>
+
                 <div class="item">
                     Info
                 </div>
@@ -75,7 +75,7 @@
                     <label>Category</label>
                     <select name="category-id" class="ui search dropdown">
                         {% for category in categories %}
-                        <option value="{{ category.id }}" >{{ category.name }}</option>
+                        <option value="{{ category.id }}" {{ "selected" if category.id == category_id else "" }}>{{ category.name }}</option>
                     {% endfor %}
                     </select>
                 </div>

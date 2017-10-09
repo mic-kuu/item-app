@@ -26,15 +26,15 @@
             <i class="wrench icon"></i>
             Actions
             <div class="menu">
-                <div class="item">
-                    Add item
-                </div>
+
+                <a href="{{ url_for("addItem") }}" class="item">Add item</a>
+
                 <div class="item">
                     Add category
                 </div>
-                <div class="item">
-                    Main menu
-                </div>
+
+                <a href="{{ url_for("categoryView") }}" class="item">Main menu</a>
+
                 <div class="item">
                     Info
                 </div>
