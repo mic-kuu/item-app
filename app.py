@@ -1,16 +1,28 @@
+import os
+import uuid
+
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from werkzeug.utils import secure_filename
 
 from database_setup import Base, Item, Category, User
 
+UPLOAD_FOLDER = 'static/uploads/'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 engine  = create_engine('sqlite:///itemsapp.db')
 Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @app.route('/')
@@ -41,14 +53,45 @@ def addItem(category_id=1):
                         description=request.form['description'],
                         category_id=request.form['category-id'])
 
+        file = request.files['profile-pic']
+
+        if file and allowed_file(file.filename):
+
+            filename = secure_filename(file.filename)
+            extension = os.path.splitext(filename)[1]
+            unique_filename = str(uuid.uuid4()) + str(extension)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            new_item.picture = unique_filename
+
         session.add(new_item)
         session.commit()
 
-        return redirect(url_for('categoryView', category_id=request.form['category-id']))
+        return redirect(url_for('itemView', category_id=request.form['category-id']))
 
     else:
         categories = session.query(Category).all()
         return render_template('add_item.html', categories=categories, category_id=category_id)
+
+@app.route('/category/<int:category_id>/item/<int:item_id>/edit/', methods=['GET', 'POST'])
+def editItem(category_id, item_id):
+    if request.method == 'POST':
+
+        edited_item = session.query(Item).filter_by(category_id=category_id, id=item_id).one()
+
+        edited_item.name = request.form['name']
+        edited_item.price = request.form['price']
+        edited_item.description = request.form['description']
+        edited_item.category_id = request.form['category-id']
+
+        session.add(edited_item)
+        session.commit()
+
+        return redirect(url_for('itemView', category_id=request.form['category-id']))
+
+    else:
+        categories = session.query(Category).all()
+        edited_item = session.query(Item).filter_by(category_id=category_id, id=item_id).one()
+        return render_template('edit_item.html', categories=categories, category_id=category_id, item=edited_item)
 
 
 @app.route('/category/<int:category>/item/<int:item>/delete/')

@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Add item</title>
+    <title>Edit item</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
     <script
-      src="https://code.jquery.com/jquery-3.2.1.min.js"
-      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-      crossorigin="anonymous">
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
 
@@ -65,53 +65,53 @@
 </div>
 
 
-    <div class="ui one column doubling stackable centered container">
+<div class="ui one column doubling stackable centered container">
 
-        <div class="ui clearing segment">
+    <div class="ui clearing segment">
         <div class="ui top attached label">Item definition</div>
-        <a class="ui red right ribbon label">New item</a>
-            <form action="#" method="post" class="ui form" enctype="multipart/form-data">
-                <div class="field">
-                    <label>Category</label>
-                    <select name="category-id" class="ui search dropdown">
-                        {% for category in categories %}
+        <a class="ui blue right ribbon label">Edit item</a>
+        <form action="#" method="post" class="ui form">
+            <div class="field">
+                <label>Category</label>
+                <select name="category-id" class="ui search dropdown">
+                    {% for category in categories %}
                         <option value="{{ category.id }}" {{ "selected" if category.id == category_id else "" }}>{{ category.name }}</option>
                     {% endfor %}
-                    </select>
-                </div>
-                <div class="field required">
-                    <label>Name</label>
-                    <input type="text" required name="name">
-                </div>
+                </select>
+            </div>
+            <div class="field required">
+                <label>Name</label>
+                <input type="text" required name="name" value="{{ item.name }}">
+            </div>
 
-                <div class="field required">
-                    <label>Price</label>
-                    <input type="number" step="0.01" min="0" value="0" name="price" required>
-                </div>
+            <div class="field required">
+                <label>Price</label>
+                <input type="number" step="0.01" min="0" value="{{ item.price }}" name="price" required >
+            </div>
 
-                <div class="field">
-                    <label>Description</label>
-                    <input type="text" name="description">
+            <div class="field">
+                <label>Description</label>
+                <input type="text" name="description" value="{{ item.description }}">
 
-                </div>
+            </div>
 
-                <div class="field">
-                    <label>Picture</label>
-                    <input type="file" name="profile-pic" accept="image/*" >
-                </div>
+            <div class="field">
+                <label>Picture</label>
+                <input type="image" name="picture">
+            </div>
 
-                <div class="field">
-                    <input type="submit" value="Add item" class="ui positive right floated button">
-                </div>
+            <div class="field">
+                <input type="submit" value="Save changes" class="ui positive right floated button">
+            </div>
 
-            </form>
+        </form>
 
-        </div>
     </div>
+</div>
 
 <script>
     $('.ui.dropdown')
-    .dropdown();
+        .dropdown();
 </script>
 
 
