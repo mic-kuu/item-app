@@ -39,12 +39,18 @@ def itemView(category_id):
     return render_template('view_item.html', category=category, items=items)
 
 
-@app.route('/add/category/')
+@app.route('/category/add', methods=['GET', 'POST'])
 def addCategory():
-    return render_template('add_category.html')
+    if request.method == 'POST':
+        return redirect(url_for('categoryView'))
 
-@app.route('/add/item/', methods=['GET', 'POST'])
-@app.route('/add/item/<int:category_id>/', methods=['GET', 'POST'])
+    else:
+        categories = session.query(Category).all()
+        return render_template('add_category.html', categories=categories)
+
+
+@app.route('/item/add/', methods=['GET', 'POST'])
+@app.route('/category/<int:category_id>/item/add', methods=['GET', 'POST'])
 def addItem(category_id=1):
     if request.method == 'POST':
 
