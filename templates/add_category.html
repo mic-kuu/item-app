@@ -1,18 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Add Category</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
-    <script
-      src="https://code.jquery.com/jquery-3.2.1.min.js"
-      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-      crossorigin="anonymous">
+{% extends "layout.html" %}
+{% block title %}Add Category{% endblock %}
+{% block content %}
+
+    <div class="ui one column doubling stackable centered container">
+
+        <div class="ui clearing segment">
+            <div class="ui top attached label">Category definition</div>
+            <a class="ui red right ribbon label">New category</a>
+            <form action="#" method="post" enctype="multipart/form-data">
+                <div class="ui double stackable grid">
+
+                    <div class="six wide centered column">
+
+                        <div class="ui blurring dimmable rounded fluid image">
+                            <div class="ui dimmer">
+                                <div class="content">
+                                    <div class="center">
+                                        <input type="file" autocomplete="off" accept="image/*" name="category-pic">
+                                        <div class="ui inverted button browse">Upload</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <img src="{{ url_for("static", filename="empty_img.png") }}">
+                        </div>
+                    </div>
+
+                    <div class="ten wide column">
+                        <div class="ui form">
+                            <div class="field required">
+                                <label>Name</label>
+                                <input type="text" required name="name">
+                            </div>
+
+                            <div class="field">
+                                <label>Description</label>
+                                <input type="text" name="description">
+
+                            </div>
+
+                            <div class="field">
+                                <input type="submit" value="Add Category" class="ui positive right floated button">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script>
+        $('.ui.dropdown')
+            .dropdown();
+
+        $(".ui.rounded.image").dimmer({
+            on: 'hover'
+        });
+
+        var $buttonFile = $(".ui.dimmable .ui.dimmer .ui.button"),
+            $inputFile = $(".ui.dimmable .ui.dimmer input[type='file']");
+
+        $($buttonFile).click(function () {
+            $(this).siblings('input[type="file"]').trigger('click');
+        });
+
+        $($inputFile).change(function () {
+            readURL(this);
+        });
+
+        function readURL(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    $('.ui.blurring.image > img').attr('src', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
 
-</head>
-<body>
-
-</body>
-</html>
+{% endblock %}

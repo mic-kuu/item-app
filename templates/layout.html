@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% block head %}
     <meta charset="UTF-8">
-    <title>Item App</title>
+    <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
+    <link rel="stylesheet" href="{{ url_for("static", filename="main.css") }}">
+
     <script
-      src="https://code.jquery.com/jquery-3.2.1.min.js"
-      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-      crossorigin="anonymous">
+            src="https://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
+    {% endblock %}
 </head>
 <body>
 
@@ -20,15 +24,19 @@
     </a>
 
 
-    <div class="right menu">
 
+    <div class="right menu">
         <div class="ui dropdown item">
             <i class="wrench icon"></i>
             Actions
             <div class="menu">
 
                 <a href="{{ url_for("addItem") }}" class="item">Add item</a>
-                <a href="{{ url_for("addCategory") }}" class="item">Add category</a>
+
+                <div class="item">
+                    Add category
+                </div>
+
                 <a href="{{ url_for("categoryView") }}" class="item">Main menu</a>
 
                 <div class="item">
@@ -38,8 +46,6 @@
         </div>
 
         <div class="item">
-
-
             <div class="content padded">
                 <div class="header">Welcome <strong>Magda</strong>!</div>
                 <div class="meta">
@@ -50,40 +56,18 @@
             <div class="ui circular mini spaced image">
                 <img src="{{ url_for("static", filename="user.jpg") }}">
             </div>
-
         </div>
 
-
     </div>
-
 
 </div>
 
-    <div class="ui three column doubling stackable grid centered container">
+{% block content %}
+{% endblock %}
 
+<div class="footer">
 
-
-        {% for category in categories %}
-            <div class="column">
-                <a href="{{ url_for('itemView', category_id=category.id) }}" class="ui fluid card link">
-                 <div class="image">
-                   <img src="{{ url_for("static", filename="empty_img.png") }}">
-                 </div>
-                 <div class="content">
-                   <strong>{{ category.name }}</strong>
-                 </div>
-               </a>
-            </div>
-        {% endfor %}
-
-
-    </div>
-
-
-<script>
-    $('.ui.dropdown')
-    .dropdown();
-</script>
+</div>
 
 </body>
 </html>
