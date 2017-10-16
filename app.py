@@ -89,6 +89,25 @@ def editItem(category_id, item_id):
         edited_item.description = request.form['description']
         edited_item.category_id = request.form['category-id']
 
+
+
+        file = request.files['profile-pic']
+
+        if file and allowed_file(file.filename):
+
+            filename = secure_filename(file.filename)
+            extension = os.path.splitext(filename)[1]
+
+            unique_filename = str(uuid.uuid4()) + str(extension)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+
+            # delete old file (if there is any)
+            if edited_item.picture:
+                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], edited_item.picture))
+            # and save filename of the new one
+            edited_item.picture = unique_filename
+
+
         session.add(edited_item)
         session.commit()
 
@@ -107,6 +126,8 @@ def deleteItem(category, item):
     item = session.query(Item).filter_by(id=item, category_id=category).one()
     session.delete(item)
     session.commit()
+
+    # TODO: Add deleting of item picture
 
     return redirect(url_for('itemView', category_id=category))
 
