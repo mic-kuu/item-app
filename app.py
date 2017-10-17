@@ -42,6 +42,21 @@ def itemView(category_id):
 @app.route('/category/add', methods=['GET', 'POST'])
 def addCategory():
     if request.method == 'POST':
+        new_category = Category(name=request.form['name'],
+                                description=request.form['description'])
+
+        picture = request.files['category-pic']
+
+        if picture and allowed_file(picture.filename):
+            filename = secure_filename(picture.filename)
+            extension = os.path.splitext(filename)[1]
+            unique_filename = str(uuid.uuid4()) + str(extension)
+            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            new_category.picture = unique_filename
+
+        session.add(new_category)
+        session.commit()
+
         return redirect(url_for('categoryView'))
 
     else:
@@ -59,14 +74,14 @@ def addItem(category_id=1):
                         description=request.form['description'],
                         category_id=request.form['category-id'])
 
-        file = request.files['profile-pic']
+        picture = request.files['profile-pic']
 
-        if file and allowed_file(file.filename):
+        if picture and allowed_file(picture.filename):
 
-            filename = secure_filename(file.filename)
+            filename = secure_filename(picture.filename)
             extension = os.path.splitext(filename)[1]
             unique_filename = str(uuid.uuid4()) + str(extension)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             new_item.picture = unique_filename
 
         session.add(new_item)

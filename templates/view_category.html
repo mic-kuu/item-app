@@ -67,7 +67,8 @@
             <div class="column">
                 <a href="{{ url_for('itemView', category_id=category.id) }}" class="ui fluid card link">
                  <div class="image">
-                   <img src="{{ url_for("static", filename="empty_img.png") }}">
+                   <img src="{{ url_for("static", filename="uploads/"+category.picture) if category.picture != none else url_for("static", filename="empty_img.png") }}">
+
                  </div>
                  <div class="content">
                    <strong>{{ category.name }}</strong>
