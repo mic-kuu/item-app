@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Add Category{% endblock %}
+{% block title %}View items in '{{ category.name }}'{% endblock %}
 {% block content %}
 
 <div class="ui one column doubling stackable centered container">
@@ -7,7 +7,7 @@
     <div class="ui segment">
         <h1 id="c-{{ category.id }}" class="category-id">{{ category.name }}</h1>
         <p>Description: {{ category.description }}</p>
-        <p>Item count: 1</p>
+        <p>Item count: {{ items|length }}</p>
     </div>
 
 
