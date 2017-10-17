@@ -1,16 +1,14 @@
 {% extends "layout.html" %}
-{% block title %}Edit item{% endblock %}
+{% block title %}Edit category{% endblock %}
 {% block content %}
 
     <div class="ui one column doubling stackable centered container">
 
         <div class="ui clearing segment">
-
-            <div class="ui top attached label">Item definition</div>
-            <a class="ui blue right ribbon label">Edit Category</a>
+            <div class="ui top attached label">Category definition</div>
+            <a class="ui blue right ribbon label">Edit category</a>
             <form action="#" method="post" enctype="multipart/form-data">
                 <div class="ui double stackable grid">
-
 
                     <div class="six wide centered column">
 
@@ -18,56 +16,39 @@
                             <div class="ui dimmer">
                                 <div class="content">
                                     <div class="center">
-                                        <input type="file" autocomplete="off" accept="image/*" name="profile-pic">
+                                        <input type="file" autocomplete="off" accept="image/*" name="category-pic">
                                         <div class="ui inverted button browse">Upload</div>
                                     </div>
                                 </div>
                             </div>
-                            <img src="{{ url_for("static", filename="uploads/"+item.picture) if item.picture != none else url_for("static", filename="empty_img.png") }}">
+                            <img src="{{ url_for("static", filename="uploads/"+category.picture) if category.picture != none else url_for("static", filename="empty_img.png") }}">
                         </div>
                     </div>
 
                     <div class="ten wide column">
-
-
                         <div class="ui form">
-                            <div class="field">
-                                <label>Category</label>
-                                <select name="category-id" class="ui search dropdown">
-                                    {% for category in categories %}
-                                        <option value="{{ category.id }}" {{ "selected" if category.id == category_id else "" }}>{{ category.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
                             <div class="field required">
                                 <label>Name</label>
-                                <input type="text" required name="name" value="{{ item.name }}">
-                            </div>
-
-                            <div class="field required">
-                                <label>Price</label>
-                                <input type="number" step="0.01" min="0" value="{{ item.price }}" name="price" required>
+                                <input type="text" value="{{ category.name }}" required name="name">
                             </div>
 
                             <div class="field">
                                 <label>Description</label>
-                                <input type="text" name="description" value="{{ item.description }}">
+                                <input type="text" value="{{ category.description }}" name="description">
 
                             </div>
 
                             <div class="field">
-                                <input type="submit" value="Save changes" class="ui positive right floated button">
+                                <input type="submit" value="Save Category" class="ui positive right floated button">
                             </div>
                         </div>
-
                     </div>
-
                 </div>
+
             </form>
+
         </div>
-
     </div>
-
 
     <script>
         $('.ui.dropdown')

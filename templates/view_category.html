@@ -14,8 +14,14 @@
 
                     <div class="content">
                         <span class="right floated">
-                          <i class="edit large icon"></i>
-                          <i class="trash large icon"></i>
+                            <a href="{{ url_for("editCategory", category_id=category.id) }}">
+                                <i class="edit large icon link"></i>
+                            </a>
+                            <a href="{{ url_for("deleteCategory", category_id=category.id) }}">
+                                <i class="trash large icon link"></i>
+                            </a>
+
+
                         </span>
                         <a href="{{ url_for("itemView", category_id=category.id) }}">
                             <strong>{{ category.name }}</strong>
