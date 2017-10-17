@@ -1,90 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Item App</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
-    <script
-      src="https://code.jquery.com/jquery-3.2.1.min.js"
-      integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-      crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
-</head>
-<body>
+{% extends "layout.html" %}
+{% block title %}Categories{% endblock %}
 
-<div class="ui large main menu">
+{% block content %}
 
-    <a href="{{ url_for("categoryView") }}" class="header item">
-        <img src="{{ url_for("static", filename="logo.png") }}">
-    </a>
+<div class="ui three column doubling stackable grid centered container">
 
+    {% for category in categories %}
+        <div class="column">
+            <a href="{{ url_for('itemView', category_id=category.id) }}" class="ui fluid card link">
+                <div class="image">
+                    <img src="{{ url_for("static", filename="uploads/"+category.picture) if category.picture != none else url_for("static", filename="empty_img.png") }}">
 
-    <div class="right menu">
-
-        <div class="ui dropdown item">
-            <i class="wrench icon"></i>
-            Actions
-            <div class="menu">
-
-                <a href="{{ url_for("addItem") }}" class="item">Add item</a>
-                <a href="{{ url_for("addCategory") }}" class="item">Add category</a>
-                <a href="{{ url_for("categoryView") }}" class="item">Main menu</a>
-
-                <div class="item">
-                    Info
                 </div>
-            </div>
-        </div>
-
-        <div class="item">
-
-
-            <div class="content padded">
-                <div class="header">Welcome <strong>Magda</strong>!</div>
-                <div class="meta">
-                    <span class="logout">Not you? <a href="#">Log out</a></span>
+                <div class="content">
+                    <strong>{{ category.name }}</strong>
                 </div>
-            </div>
-
-            <div class="ui circular mini spaced image">
-                <img src="{{ url_for("static", filename="user.jpg") }}">
-            </div>
-
+            </a>
         </div>
-
-
-    </div>
-
+    {% endfor %}
 
 </div>
 
-    <div class="ui three column doubling stackable grid centered container">
-
-
-
-        {% for category in categories %}
-            <div class="column">
-                <a href="{{ url_for('itemView', category_id=category.id) }}" class="ui fluid card link">
-                 <div class="image">
-                   <img src="{{ url_for("static", filename="uploads/"+category.picture) if category.picture != none else url_for("static", filename="empty_img.png") }}">
-
-                 </div>
-                 <div class="content">
-                   <strong>{{ category.name }}</strong>
-                 </div>
-               </a>
-            </div>
-        {% endfor %}
-
-
-    </div>
-
-
 <script>
     $('.ui.dropdown')
-    .dropdown();
+        .dropdown();
 </script>
 
-</body>
-</html>
+{% endblock %}
