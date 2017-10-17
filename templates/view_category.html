@@ -1,29 +1,38 @@
 {% extends "layout.html" %}
 {% block title %}Categories{% endblock %}
-
 {% block content %}
 
-<div class="ui three column doubling stackable grid centered container">
+    <div class="ui three column doubling stackable grid centered container">
 
-    {% for category in categories %}
-        <div class="column">
-            <a href="{{ url_for('itemView', category_id=category.id) }}" class="ui fluid card link">
-                <div class="image">
-                    <img src="{{ url_for("static", filename="uploads/"+category.picture) if category.picture != none else url_for("static", filename="empty_img.png") }}">
+        {% for category in categories %}
+            <div class="column">
+                <div class="ui fluid card">
+
+                    <a href="{{ url_for("itemView", category_id=category.id) }}" class="image">
+                        <img src="{{ url_for("static", filename="uploads/"+category.picture) if category.picture != none else url_for("static", filename="empty_img.png") }}">
+                    </a>
+
+                    <div class="content">
+                        <span class="right floated">
+                          <i class="edit large icon"></i>
+                          <i class="trash large icon"></i>
+                        </span>
+                        <a href="{{ url_for("itemView", category_id=category.id) }}">
+                            <strong>{{ category.name }}</strong>
+                        </a>
+
+                    </div>
+
 
                 </div>
-                <div class="content">
-                    <strong>{{ category.name }}</strong>
-                </div>
-            </a>
-        </div>
-    {% endfor %}
+            </div>
+        {% endfor %}
 
-</div>
+    </div>
 
-<script>
-    $('.ui.dropdown')
-        .dropdown();
-</script>
+    <script>
+        $('.ui.dropdown')
+            .dropdown();
+    </script>
 
 {% endblock %}
