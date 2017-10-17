@@ -140,7 +140,7 @@ def editCategory(category_id):
         edited_category = session.query(Category).filter_by(id=category_id).one()
 
         edited_category.name = request.form['name']
-        edited_category.price = request.form['description']
+        edited_category.description = request.form['description']
 
         picture = request.files['category-pic']
 
