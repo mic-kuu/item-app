@@ -51,9 +51,15 @@
 
                             </div>
 
-                            <div class="field">
-                                <input type="submit" value="Add item" class="ui positive right floated button">
-                            </div>
+                                <div class="field">
+
+                                    <input type="submit" value="Save Item" class="ui right floated positive button">
+
+                                    <a href="{{ url_for("itemView", category_id=category_id) }}">
+                                        <input type="button" value="Cancel" class="ui right floated negative button">
+                                    </a>
+
+                                </div>
                         </div>
                     </div>
                 </div>
