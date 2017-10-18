@@ -116,10 +116,7 @@ def editItem(category_id, item_id):
             unique_filename = str(uuid.uuid4()) + str(extension)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
 
-            # delete old file (if there is any)
-            if edited_item.picture:
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], edited_item.picture))
-            # and save filename of the new one
+            delete_picture(edited_item.picture)
             edited_item.picture = unique_filename
 
         session.add(edited_item)
@@ -152,10 +149,8 @@ def editCategory(category_id):
             unique_filename = str(uuid.uuid4()) + str(extension)
             picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
 
-            # delete old file (if there is any)
-            if edited_category.picture:
-                os.remove(os.path.join(app.config['UPLOAD_FOLDER'], edited_category.picture))
-                # and save filename of the new one
+            delete_picture(edited_category.picture)
+
             edited_category.picture = unique_filename
 
         session.add(edited_category)
@@ -170,10 +165,12 @@ def editCategory(category_id):
 
 @app.route('/category/<int:category>/item/<int:item>/delete/')
 def deleteItem(category, item):
-    # TODO: Add handling on non-existing item delete
-    item = session.query(Item).filter_by(id=item, category_id=category).one()
-    session.delete(item)
-    session.commit()
+    item = session.query(Item).filter_by(id=item, category_id=category).one_or_none()
+
+    if item:
+        delete_picture(item.picture)
+        session.delete(item)
+        session.commit()
 
     # TODO: Add deleting of item picture
 
@@ -184,6 +181,13 @@ def deleteItem(category, item):
 def deleteCategory(category_id):
     # TODO: Add handling on non-existing item delete
     category = session.query(Category).filter_by(id=category_id).one()
+    items = session.query(Item).filter_by(category_id=category.id).all()
+
+    # delete all pictures - for items in category and for category
+    for item in items:
+        delete_picture(item.picture)
+
+    delete_picture(category.picture)
 
     session.delete(category)
     session.commit()
@@ -191,6 +195,15 @@ def deleteCategory(category_id):
     # TODO: Add deleting of item picture + all items in the category
 
     return redirect(url_for('categoryView'))
+
+
+def delete_picture(filename):
+    if filename:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        except OSError:
+            # TODO: add logger module
+            pass
 
 
 if __name__ == "__main__":
