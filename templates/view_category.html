@@ -17,14 +17,13 @@
                             <a href="{{ url_for("editCategory", category_id=category.id) }}">
                                 <i class="edit large icon link"></i>
                             </a>
-                            <a href="{{ url_for("deleteCategory", category_id=category.id) }}">
+                            <a href="#">
                                 <i class="trash large icon link"></i>
                             </a>
 
-
                         </span>
                         <a href="{{ url_for("itemView", category_id=category.id) }}">
-                            <strong>{{ category.name }}</strong>
+                            <strong class="category-id" id="id-{{ category.id }}">{{ category.name }}</strong>
                         </a>
 
                     </div>
@@ -36,9 +35,57 @@
 
     </div>
 
-    <script>
-        $('.ui.dropdown')
-            .dropdown();
-    </script>
+<!--  Modal with confirmation before deleting an item. Dynamically modified by jQuery -->
+<div class="ui basic modal">
+    <div class="ui icon header">
+        <i class="warning circle icon"></i>
+        Delete item
+    </div>
+    <div class="content">
+        <p class="modal-text"></p>
+    </div>
+    <div class="actions">
+        <div class="ui basic cancel inverted button">
+            <i class="remove icon"></i>
+            No
+        </div>
+        <div class="ui red ok inverted button">
+            <i class="checkmark icon"></i>
+            Yes
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $('.ui.dropdown')
+        .dropdown();
+
+    $('.trash.icon').click(function () {
+
+        // get selected
+        const name = $(this).parents('.content')
+            .find('strong')
+            .text()
+            .trim();
+
+        // get id of selected category
+        const category_id = $(this).parents('.content')
+            .find('.category-id')
+            .attr('id')
+            .replace(/^\D+/g, '');
+
+
+        // assign new behaviour to delete button on modal - specify category to be deleted
+        $('.ui.red.ok.inverted.button').click(function () {
+            location.href = `http://${document.location.host}/category/${category_id}/delete/`;
+        });
+
+        // modify text to correspond selected category
+        $('.modal-text').text(`Are you sure you want to delete a category named: "${name}"`);
+        $('.ui.basic.modal').modal('show');
+    })
+
+</script>
 
 {% endblock %}
