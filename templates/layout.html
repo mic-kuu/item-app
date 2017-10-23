@@ -42,14 +42,14 @@
 
         <div class="item">
             <div class="content padded">
-                <div class="header">Welcome <strong>Magda</strong>!</div>
+                <div class="header">Welcome <strong>{{ user_name }}</strong>!</div>
                 <div class="meta">
-                    <span class="logout">Not you? <a href="#">Log out</a></span>
+                    <span class="logout">Not you? <a href="{{ url_for("google_logout") }}">Log out</a></span>
                 </div>
             </div>
 
             <div class="ui circular mini spaced image">
-                <img src="{{ url_for("static", filename="user.jpg") }}">
+                <img src="{{ user_pic }}">
             </div>
         </div>
 
