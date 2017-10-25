@@ -6,13 +6,14 @@ import uuid
 
 import httplib2
 import requests
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import make_response
 from flask import session as login_session
 from oauth2client.client import FlowExchangeError
 from oauth2client.client import flow_from_clientsecrets
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
 from database_setup import Base, Item, Category
@@ -345,15 +346,66 @@ def deleteCategory(category_id):
     # delete all pictures - for items in category and for category
     for item in items:
         delete_picture(item.picture)
+        session.delete(item)
 
     delete_picture(category.picture)
 
     session.delete(category)
     session.commit()
 
-    # TODO: Add deleting of item picture + all items in the category
-
     return redirect(url_for('categoryView'))
+
+def api_error(message):
+    return jsonify( { "error" : message } )
+
+def api_success(message):
+    return jsonify( { "success" : message } )
+
+
+@app.route("/api/v1/category/<int:category_id>", methods=['GET', 'PUT', 'DELETE'])
+def category_api(category_id):
+
+
+    try:
+        category = session.query(Category).filter_by(id=category_id).one()
+
+    except NoResultFound:
+        return api_error("There is no category with id: %s. " % category_id)
+
+    if request.method == 'GET':
+        return jsonify(category = category.serialize)
+
+    if request.method == 'PUT':
+        request_json = request.get_json()
+
+        if not request_json:
+            return api_error("Nothing changed - empty JSON body.")
+
+        if 'name' in request_json:
+            category.name = request_json['name']
+        if 'description' in request_json:
+            category.description = request_json['description']
+
+        session.add(category)
+        session.commit()
+
+        return api_success("Succesuly modified category with id: %s." % category_id)
+
+    if request.method == 'DELETE':
+        items = session.query(Item).filter_by(category_id=category.id).all()
+
+        for item in items:
+            delete_picture(item.picture)
+            session.delete(item)
+
+        delete_picture(category.picture)
+
+        session.delete(category)
+        session.commit()
+
+        return api_success("Successfully deleted category with id: %s and it's all items." % category_id)
+
+
 
 
 def delete_picture(filename):

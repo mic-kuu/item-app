@@ -25,6 +25,15 @@ class Category(Base):
     description = Column(String(250))
     picture = Column(String(250))
 
+    @property
+    def serialize(self):
+        return {
+            'id' : self.id,
+            'name' : self.name,
+            'description' : self.description,
+            'picture' : self.picture
+        }
+
 class Item(Base):
     __tablename__ = 'item'
     id = Column(Integer, primary_key=True)
