@@ -365,7 +365,6 @@ def api_success(message):
 @app.route("/api/v1/category/<int:category_id>", methods=['GET', 'PUT', 'DELETE'])
 def category_api(category_id):
 
-
     try:
         category = session.query(Category).filter_by(id=category_id).one()
 
@@ -373,7 +372,14 @@ def category_api(category_id):
         return api_error("There is no category with id: %s. " % category_id)
 
     if request.method == 'GET':
-        return jsonify(category = category.serialize)
+        items = session.query(Item).filter_by(category_id = category_id).all()
+        items_ids = []
+        for item in items:
+            items_ids.append(item.id)
+
+        print(items_ids)
+
+        return jsonify(category=category.serialize)
 
     if request.method == 'PUT':
         request_json = request.get_json()
@@ -389,7 +395,7 @@ def category_api(category_id):
         session.add(category)
         session.commit()
 
-        return api_success("Succesuly modified category with id: %s." % category_id)
+        return api_success("Successfully modified category with id: %s." % category_id)
 
     if request.method == 'DELETE':
         items = session.query(Item).filter_by(category_id=category.id).all()
@@ -404,6 +410,42 @@ def category_api(category_id):
         session.commit()
 
         return api_success("Successfully deleted category with id: %s and it's all items." % category_id)
+
+@app.route("/api/v1/category/<int:category_id>/item/<int:item_id>", methods=['GET', 'PUT', 'DELETE'])
+def item_api(category_id, item_id):
+    try:
+        item = session.query(Item).filter_by(id=item_id, category_id=category_id).one()
+
+    except NoResultFound:
+        return api_error("There is no item with id: {} in category with id: {}".format(item_id, category_id) )
+
+    if request.method == 'GET':
+        return jsonify(item = item.serialize)
+
+    if request.method == 'DELETE':
+        delete_picture(item.picture)
+
+        session.delete(item)
+        session.commit()
+        return api_success("Successfully deleted item with id: {} from category id: {}.").format(item_id, category_id)
+
+    if request.method == 'PUT':
+        request_json = request.get_json()
+
+        if not request_json:
+            return api_error("Nothing changed - empty JSON body.")
+
+        if 'name' in request_json:
+            item.name = request_json['name']
+        if 'description' in request_json:
+            item.description = request_json['description']
+        if 'price' in request_json:
+            item.description = request_json['price']
+
+        session.add(item)
+        session.commit()
+
+        return api_success("Successfully modified item with id: {} from category id: {}.".format(item_id, category_id))
 
 
 
