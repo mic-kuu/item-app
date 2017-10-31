@@ -29,17 +29,22 @@
                     <div class="description">
                         <p>{{ item.description }}</p>
                     </div>
-                    <div class="extra">
 
-                        <div class="ui negative right floated button delete">
-                            Delete
+                    {# show edit/delete only for user's items #}
+                    {% if user_id == item.user_id %}
+                        <div class="extra">
+
+                            <div class="ui negative right floated button delete">
+                                Delete
+                            </div>
+
+                            <a href="{{ url_for("editItem", category_id=item.category_id, item_id=item.id) }}" class="ui positive right floated button">
+                                Edit
+                            </a>
+
                         </div>
+                    {% endif %}
 
-                        <a href="{{ url_for("editItem", category_id=item.category_id, item_id=item.id) }}" class="ui positive right floated button">
-                            Edit
-                        </a>
-
-                    </div>
                 </div>
             </div>
 

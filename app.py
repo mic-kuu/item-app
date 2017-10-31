@@ -6,7 +6,7 @@ import uuid
 
 import httplib2
 import requests
-from flask import Flask, render_template, request, redirect, url_for, jsonify, logger
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask import make_response
 from flask import session as login_session
 from oauth2client.client import FlowExchangeError
@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
-from database_setup import Base, Item, Category
+from database_setup import Base, Item, Category, User
 
 # APP-WIDE PARAMETERS
 UPLOAD_FOLDER = 'static/uploads/'
@@ -49,7 +49,9 @@ def inject_user():
     if 'picture' in login_session:
         user_pic = login_session['picture']
 
-    return dict(user_name=user_name, user_pic=user_pic)
+    user_id = login_session['user_id']
+
+    return dict(user_name=user_name, user_pic=user_pic, user_id=user_id)
 
 
 @app.route('/login/')
@@ -57,6 +59,22 @@ def login_view():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
     return render_template('login.html', state=state)
+
+'''
+Process user that authorized w Google. If exists - returns it's id. If not - creates a new one and returns id.
+'''
+def process_user():
+    user = session.query(User).filter_by(email=login_session['email']).one_or_none()
+
+    if user is None:
+        user = User(username=login_session['username'],
+                    email=login_session['email'],
+                    picture=login_session['picture'])
+
+        session.add(user)
+        session.commit()
+
+    return user.id
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -86,7 +104,7 @@ def google_connect():
            % access_token)
     h = httplib2.Http()
 
-    print (str(h.request(url, 'GET')[1]))
+    print(str(h.request(url, 'GET')[1]))
 
     result = json.loads(h.request(url, 'GET')[1].decode())
     # If there was an error in the access token info, abort.
@@ -135,6 +153,12 @@ def google_connect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    # email has to be unique - so create a new user if email is not in DB
+    user_id = process_user()
+
+    login_session['user_id'] = user_id
+
+
     response = make_response(json.dumps('Successfuly logged in.'),
                              200)
     response.headers['Content-Type'] = 'application/json'
@@ -151,8 +175,12 @@ def google_logout():
         return response
 
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+
+
     http = httplib2.Http()
     result = http.request(url, 'GET')[0]
+
+    print(result)
 
     if result['status'] == '200':
         del login_session['access_token']
@@ -163,6 +191,7 @@ def google_logout():
         return redirect(url_for("login_view"))
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -194,8 +223,11 @@ def addCategory():
         return redirect(url_for("login_view"))
 
     if request.method == 'POST':
+        # TODO: add handling if not logged in
+
         new_category = Category(name=request.form['name'],
-                                description=request.form['description'])
+                                description=request.form['description'],
+                                user_id=login_session['user_id'])
 
         picture = request.files['category-pic']
 
@@ -227,7 +259,8 @@ def addItem(category_id=1):
         new_item = Item(name=request.form['name'],
                         price=request.form['price'],
                         description=request.form['description'],
-                        category_id=request.form['category-id'])
+                        category_id=request.form['category-id'],
+                        user_id=login_session['user_id'])
 
         picture = request.files['profile-pic']
 
@@ -344,8 +377,7 @@ def deleteCategory(category_id):
         category = session.query(Category).filter_by(id=category_id).one()
 
     except NoResultFound:
-        return api_error("There is no category with id: {}.".format(category_id) )
-
+        return api_error("There is no category with id: {}.".format(category_id))
 
     items = session.query(Item).filter_by(category_id=category.id).all()
 
@@ -361,16 +393,28 @@ def deleteCategory(category_id):
 
     return redirect(url_for('categoryView'))
 
+
 def api_error(message):
-    return jsonify( { "error" : message } )
+    return jsonify({"error": message})
+
 
 def api_success(message):
-    return jsonify( { "success" : message } )
+    return jsonify({"success": message})
+
+
+@app.route("/api/v1/categories/")
+def categories_api():
+    categories = session.query(Category).all()
+
+    json_data = []
+    for category in categories:
+        json_data.append(category.serialize)
+
+    return jsonify(categories=json_data)
 
 
 @app.route("/api/v1/category/<int:category_id>", methods=['GET', 'PUT', 'DELETE'])
 def category_api(category_id):
-
     try:
         category = session.query(Category).filter_by(id=category_id).one()
 
@@ -378,19 +422,16 @@ def category_api(category_id):
         return api_error("There is no category with id: %s. " % category_id)
 
     if request.method == 'GET':
-        items = session.query(Item).filter_by(category_id = category_id).all()
+        items = session.query(Item).filter_by(category_id=category_id).all()
 
         # building a response json with the category and all it's items
         items_list = []
-
         for item in items:
-            items_list.append(
-                item.serialize
-            )
+            items_list.append(item.serialize)
 
         json_data = {
-            "category" : category.serialize,
-            "items" : items_list
+            "category": category.serialize,
+            "items": items_list
         }
 
         return jsonify(json_data)
@@ -425,16 +466,17 @@ def category_api(category_id):
 
         return api_success("Successfully deleted category with id: %s and it's all items." % category_id)
 
+
 @app.route("/api/v1/category/<int:category_id>/item/<int:item_id>", methods=['GET', 'PUT', 'DELETE'])
 def item_api(category_id, item_id):
     try:
         item = session.query(Item).filter_by(id=item_id, category_id=category_id).one()
 
     except NoResultFound:
-        return api_error("There is no item with id: {} in category with id: {}".format(item_id, category_id) )
+        return api_error("There is no item with id: {} in category with id: {}".format(item_id, category_id))
 
     if request.method == 'GET':
-        return jsonify(item = item.serialize)
+        return jsonify(item=item.serialize)
 
     if request.method == 'DELETE':
         delete_picture(item.picture)
@@ -462,8 +504,6 @@ def item_api(category_id, item_id):
         return api_success("Successfully modified item with id: {} from category id: {}.".format(item_id, category_id))
 
 
-
-
 def delete_picture(filename):
     if filename:
         try:
@@ -474,7 +514,6 @@ def delete_picture(filename):
 
 
 if __name__ == "__main__":
-
     # Note - for a production env change secret_key to a unique string and debug to False !
     app.secret_key = "this_is_my_secret"
     app.debug = True
