@@ -6,7 +6,7 @@ import uuid
 
 import httplib2
 import requests
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, logger
 from flask import make_response
 from flask import session as login_session
 from oauth2client.client import FlowExchangeError
@@ -23,7 +23,7 @@ UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'ico'}
 CLIENT_ID = json.loads(
     open('client_secret.json', 'r').read())['web']['client_id']
-APPLICATION_NAME = "Restaurant Menu Application"
+APPLICATION_NAME = "Item App Application"
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -39,7 +39,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-# add context - logged username will be avaliable in jinja templates
+# add context - logged username will be available in jinja templates
 @app.context_processor
 def inject_user():
     user_name = "None"
@@ -85,7 +85,10 @@ def google_connect():
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
            % access_token)
     h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
+
+    print (str(h.request(url, 'GET')[1]))
+
+    result = json.loads(h.request(url, 'GET')[1].decode())
     # If there was an error in the access token info, abort.
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
@@ -329,8 +332,6 @@ def deleteItem(category, item):
         session.delete(item)
         session.commit()
 
-    # TODO: Add deleting of item picture
-
     return redirect(url_for('itemView', category_id=category))
 
 
@@ -339,8 +340,13 @@ def deleteCategory(category_id):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
-    # TODO: Add handling on non-existing item delete
-    category = session.query(Category).filter_by(id=category_id).one()
+    try:
+        category = session.query(Category).filter_by(id=category_id).one()
+
+    except NoResultFound:
+        return api_error("There is no category with id: {}.".format(category_id) )
+
+
     items = session.query(Item).filter_by(category_id=category.id).all()
 
     # delete all pictures - for items in category and for category
@@ -373,13 +379,21 @@ def category_api(category_id):
 
     if request.method == 'GET':
         items = session.query(Item).filter_by(category_id = category_id).all()
-        items_ids = []
+
+        # building a response json with the category and all it's items
+        items_list = []
+
         for item in items:
-            items_ids.append(item.id)
+            items_list.append(
+                item.serialize
+            )
 
-        print(items_ids)
+        json_data = {
+            "category" : category.serialize,
+            "items" : items_list
+        }
 
-        return jsonify(category=category.serialize)
+        return jsonify(json_data)
 
     if request.method == 'PUT':
         request_json = request.get_json()
@@ -455,11 +469,13 @@ def delete_picture(filename):
         try:
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         except OSError:
-            # TODO: add logger module
-            pass
+            print("There was an error deleting file: '{}'.".format(filename))
+            return
 
 
 if __name__ == "__main__":
+
+    # Note - for a production env change secret_key to a unique string and debug to False !
     app.secret_key = "this_is_my_secret"
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
