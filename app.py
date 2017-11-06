@@ -380,7 +380,11 @@ def item_view(category_id):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
-    category = session.query(Category).filter_by(id=category_id).one()
+    try:
+        category = session.query(Category).filter_by(id=category_id).one()
+    except NoResultFound:
+        return render_template("404.html")
+
     items = session.query(Item).filter_by(category_id=category_id).all()
 
     return render_template('view_item.html', category=category, items=items)

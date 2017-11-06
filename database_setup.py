@@ -5,9 +5,12 @@ from passlib.apps import custom_app_context as pwd_context
 
 from sqlalchemy import create_engine
 
-###
-# 
-###
+
+##
+# MODEL DECLARATION (SQL ALCHEMY SETUP)
+##
+
+
 Base = declarative_base()
 
 
