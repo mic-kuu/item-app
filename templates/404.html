@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+        <meta charset="UTF-8">
+        <title>We're sorry - 404</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
+        <link rel="stylesheet" href="{{ url_for("static", filename="main.css") }}">
+
+        <script
+                src="https://code.jquery.com/jquery-3.2.1.min.js"
+                integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+                crossorigin="anonymous">
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
+    {% endblock %}
+</head>
+<body>
+
+
+<div class="whole-page">
+    <div class="ui raised very padded text container center aligned clearing segment">
+        <h2 class="ui header">We're very sorry :(</h2>
+        <h4>There is no given resource on this server (404)</h4>
+        <a href="{{ url_for("category_view") }}">
+            <div class="ui right floated positive button">Go back</div>
+        </a>
+    </div>
+</div>
+
+
+</body>
+</html>

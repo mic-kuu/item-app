@@ -5,7 +5,11 @@ from passlib.apps import custom_app_context as pwd_context
 
 from sqlalchemy import create_engine
 
+###
+# 
+###
 Base = declarative_base()
+
 
 class User(Base):
     __tablename__ = 'user'
@@ -32,10 +36,10 @@ class Category(Base):
     @property
     def serialize(self):
         return {
-            'id' : self.id,
-            'name' : self.name,
-            'description' : self.description,
-            'picture' : self.picture
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'picture': self.picture
         }
 
 
@@ -56,16 +60,16 @@ class Item(Base):
     @property
     def serialize(self):
         return {
-            'id' : self.id,
-            'name' : self.name,
-            'price' : self.description,
-            'picture' : self.picture,
-            'description' : self.picture,
-            'user_id' : self.user_id,
-            'category_id' : self.category_id
+            'id': self.id,
+            'name': self.name,
+            'price': self.description,
+            'picture': self.picture,
+            'description': self.picture,
+            'user_id': self.user_id,
+            'category_id': self.category_id
         }
 
 
-engine  = create_engine('sqlite:///itemsapp.db')
+engine = create_engine('sqlite:///itemsapp.db')
 
 Base.metadata.create_all(engine)

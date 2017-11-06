@@ -35,35 +35,52 @@ session = DBSession()
 
 
 def allowed_file(filename):
+    """
+    A helper function determining if user selected allowed picture extension
+    :param filename: filename (name.extension)
+    :return: True if extension is allowed
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
-# add context - logged username will be available in jinja templates
-@app.context_processor
-def inject_user():
-    user_name = "None"
-    user_pic = "?"
-    if 'username' in login_session:
-        user_name = login_session['username']
-    if 'picture' in login_session:
-        user_pic = login_session['picture']
-
-    user_id = login_session['user_id']
-
-    return dict(user_name=user_name, user_pic=user_pic, user_id=user_id)
+def delete_picture(filename):
+    """
+    Finds appropriate picture in the uploads folder and deletes it
+    :param filename: Name of the file with the extension
+    """
+    if filename:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        except OSError:
+            print("There was an error deleting file: '{}'.".format(filename))
 
 
-@app.route('/login/')
-def login_view():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
-    login_session['state'] = state
-    return render_template('login.html', state=state)
+def api_error(message):
+    """
+    A helper function returning API error message
+    :param message: Error message
+    :return: JSON string
+    """
+    return jsonify({"error": message})
 
-'''
-Process user that authorized w Google. If exists - returns it's id. If not - creates a new one and returns id.
-'''
+
+def api_success(message):
+    """
+    A helper function returning API success message
+    :param message: Success message
+    :return: JSON string
+    """
+    return jsonify({"success": message})
+
+
 def process_user():
+    """
+    Process user that was authorized with Google. If user exists in DB
+    returns it's id. If there is no user - creates a new one.
+
+    :return: ID of the user
+    """
     user = session.query(User).filter_by(email=login_session['email']).one_or_none()
 
     if user is None:
@@ -77,8 +94,50 @@ def process_user():
     return user.id
 
 
+@app.context_processor
+def inject_user():
+    """
+    Adds context to the Jinija template. Returned variables are accessible
+    in Jinija templates.
+    :return: Variables from the returned dict will be accessible template.
+    """
+
+    user_name = "None"
+    user_pic = "?"
+    user_id = 0
+
+    if 'username' in login_session:
+        user_name = login_session['username']
+
+    if 'picture' in login_session:
+        user_pic = login_session['picture']
+
+    if 'user_id' in login_session:
+        user_id = login_session['user_id']
+
+    return dict(user_name=user_name, user_pic=user_pic, user_id=user_id)
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    # Custom 404 page template
+    return render_template('404.html'), 404
+
+
+@app.route('/login/')
+def login_view():
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    login_session['state'] = state
+    return render_template('login.html', state=state)
+
+
 @app.route('/gconnect', methods=['POST'])
 def google_connect():
+    """
+    Authorizes app with Google Sign-In
+    :return: Google Response
+    """
+
     # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -155,12 +214,9 @@ def google_connect():
 
     # email has to be unique - so create a new user if email is not in DB
     user_id = process_user()
-
     login_session['user_id'] = user_id
 
-
-    response = make_response(json.dumps('Successfuly logged in.'),
-                             200)
+    response = make_response(json.dumps('Successfuly logged in.'), 200)
     response.headers['Content-Type'] = 'application/json'
 
     return response
@@ -176,11 +232,8 @@ def google_logout():
 
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
 
-
     http = httplib2.Http()
     result = http.request(url, 'GET')[0]
-
-    print(result)
 
     if result['status'] == '200':
         del login_session['access_token']
@@ -188,16 +241,18 @@ def google_logout():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        return redirect(url_for("login_view"))
+
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Type'] = 'application/json'
-        return response
+
+
+    return redirect(url_for('login_view'))
 
 
 @app.route('/')
-def categoryView():
+def category_view():
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
@@ -205,25 +260,12 @@ def categoryView():
     return render_template('view_category.html', categories=categories)
 
 
-@app.route('/category/<int:category_id>/')
-def itemView(category_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
-    category = session.query(Category).filter_by(id=category_id).one()
-
-    items = session.query(Item).filter_by(category_id=category_id).all()
-
-    return render_template('view_item.html', category=category, items=items)
-
-
 @app.route('/category/add', methods=['GET', 'POST'])
-def addCategory():
+def category_add():
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
     if request.method == 'POST':
-        # TODO: add handling if not logged in
 
         new_category = Category(name=request.form['name'],
                                 description=request.form['description'],
@@ -241,16 +283,62 @@ def addCategory():
         session.add(new_category)
         session.commit()
 
-        return redirect(url_for('categoryView'))
+        return redirect(url_for('category_view'))
 
     else:
         categories = session.query(Category).all()
         return render_template('add_category.html', categories=categories)
 
 
+@app.route('/category/<int:category_id>/edit/', methods=['GET', 'POST'])
+def category_edit(category_id):
+    if 'username' not in login_session:
+        return redirect(url_for("login_view"))
+
+    if request.method == 'POST':
+
+        edited_category = session.query(Category).filter_by(id=category_id).one()
+
+        edited_category.name = request.form['name']
+        edited_category.description = request.form['description']
+
+        picture = request.files['category-pic']
+
+        if picture and allowed_file(picture.filename):
+            filename = secure_filename(picture.filename)
+            extension = os.path.splitext(filename)[1]
+
+            unique_filename = str(uuid.uuid4()) + str(extension)
+            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+
+            delete_picture(edited_category.picture)
+
+            edited_category.picture = unique_filename
+
+        session.add(edited_category)
+        session.commit()
+
+        return redirect(url_for('category_view'))
+
+    else:
+        category = session.query(Category).filter_by(id=category_id).one()
+        return render_template('edit_category.html', category=category)
+
+
+@app.route('/category/<int:category_id>/')
+def item_view(category_id):
+    if 'username' not in login_session:
+        return redirect(url_for("login_view"))
+
+    category = session.query(Category).filter_by(id=category_id).one()
+    items = session.query(Item).filter_by(category_id=category_id).all()
+
+    return render_template('view_item.html', category=category, items=items)
+
+
 @app.route('/item/add/', methods=['GET', 'POST'])
 @app.route('/category/<int:category_id>/item/add', methods=['GET', 'POST'])
-def addItem(category_id=1):
+def item_add(category_id=1):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
@@ -274,7 +362,7 @@ def addItem(category_id=1):
         session.add(new_item)
         session.commit()
 
-        return redirect(url_for('itemView', category_id=request.form['category-id']))
+        return redirect(url_for('item_view', category_id=request.form['category-id']))
 
     else:
         categories = session.query(Category).all()
@@ -282,7 +370,7 @@ def addItem(category_id=1):
 
 
 @app.route('/category/<int:category_id>/item/<int:item_id>/edit/', methods=['GET', 'POST'])
-def editItem(category_id, item_id):
+def item_edit(category_id, item_id):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
@@ -310,7 +398,7 @@ def editItem(category_id, item_id):
         session.add(edited_item)
         session.commit()
 
-        return redirect(url_for('itemView', category_id=request.form['category-id']))
+        return redirect(url_for('item_view', category_id=request.form['category-id']))
 
     else:
         categories = session.query(Category).all()
@@ -318,43 +406,8 @@ def editItem(category_id, item_id):
         return render_template('edit_item.html', categories=categories, category_id=category_id, item=edited_item)
 
 
-@app.route('/category/<int:category_id>/edit/', methods=['GET', 'POST'])
-def editCategory(category_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
-    if request.method == 'POST':
-
-        edited_category = session.query(Category).filter_by(id=category_id).one()
-
-        edited_category.name = request.form['name']
-        edited_category.description = request.form['description']
-
-        picture = request.files['category-pic']
-
-        if picture and allowed_file(picture.filename):
-            filename = secure_filename(picture.filename)
-            extension = os.path.splitext(filename)[1]
-
-            unique_filename = str(uuid.uuid4()) + str(extension)
-            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
-
-            delete_picture(edited_category.picture)
-
-            edited_category.picture = unique_filename
-
-        session.add(edited_category)
-        session.commit()
-
-        return redirect(url_for('categoryView'))
-
-    else:
-        category = session.query(Category).filter_by(id=category_id).one()
-        return render_template('edit_category.html', category=category)
-
-
 @app.route('/category/<int:category>/item/<int:item>/delete/')
-def deleteItem(category, item):
+def item_delete(category, item):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
@@ -365,11 +418,11 @@ def deleteItem(category, item):
         session.delete(item)
         session.commit()
 
-    return redirect(url_for('itemView', category_id=category))
+    return redirect(url_for('item_view', category_id=category))
 
 
 @app.route('/category/<int:category_id>/delete/')
-def deleteCategory(category_id):
+def category_delete(category_id):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
@@ -391,19 +444,15 @@ def deleteCategory(category_id):
     session.delete(category)
     session.commit()
 
-    return redirect(url_for('categoryView'))
-
-
-def api_error(message):
-    return jsonify({"error": message})
-
-
-def api_success(message):
-    return jsonify({"success": message})
+    return redirect(url_for('category_view'))
 
 
 @app.route("/api/v1/categories/")
 def categories_api():
+    """
+    Gets list of all categories - similar to category_view
+    :return: JSON list of all categories
+    """
     categories = session.query(Category).all()
 
     json_data = []
@@ -415,6 +464,14 @@ def categories_api():
 
 @app.route("/api/v1/category/<int:category_id>", methods=['GET', 'PUT', 'DELETE'])
 def category_api(category_id):
+    """
+    Deals with all category (single category) endpoints.
+    GET - gets JSON description of category
+    PUT - modifies chosen category
+    DELETE - deletes chosen category
+    :param category_id: id of the category, fetched from URL request
+    :return: JSON message
+    """
     try:
         category = session.query(Category).filter_by(id=category_id).one()
 
@@ -469,6 +526,15 @@ def category_api(category_id):
 
 @app.route("/api/v1/category/<int:category_id>/item/<int:item_id>", methods=['GET', 'PUT', 'DELETE'])
 def item_api(category_id, item_id):
+    """
+    Deals with all item (single item) endpoints.
+    GET - gets JSON description of item
+    PUT - modifies chosen item
+    DELETE - deletes chosen item
+    :param category_id: id of the category, fetched from URL request
+    :param item_id: id of the item, fetched from URL request
+    :return: JSON message
+    """
     try:
         item = session.query(Item).filter_by(id=item_id, category_id=category_id).one()
 
@@ -502,15 +568,6 @@ def item_api(category_id, item_id):
         session.commit()
 
         return api_success("Successfully modified item with id: {} from category id: {}.".format(item_id, category_id))
-
-
-def delete_picture(filename):
-    if filename:
-        try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        except OSError:
-            print("There was an error deleting file: '{}'.".format(filename))
-            return
 
 
 if __name__ == "__main__":

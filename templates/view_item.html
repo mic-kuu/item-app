@@ -2,111 +2,113 @@
 {% block title %}View items in '{{ category.name }}'{% endblock %}
 {% block content %}
 
-<div class="ui one column doubling stackable centered container">
+    <div class="ui one column doubling stackable centered container">
 
-    <div class="ui segment">
-        <h1 id="c-{{ category.id }}" class="category-id">{{ category.name }}</h1>
-        <p>Description: {{ category.description }}</p>
-        <p>Item count: {{ items|length }}</p>
-    </div>
+        <div class="ui center aligned segment">
+            <h1 id="c-{{ category.id }}" class="category-id">{{ category.name }}</h1>
+            <p>Description: {{ category.description }}</p>
+            <p>Item count: {{ items|length }}</p>
+        </div>
 
 
-    <div class="ui divided items relaxed">
-        {% for item in items %}
+        <div class="ui segment">
+            <div class="ui divided items relaxed">
+                {% for item in items %}
 
-            <div class="item column">
-                <div class="image">
-                    <img src="{{ url_for("static", filename="uploads/"+item.picture) if item.picture != none else url_for("static", filename="empty_img.png") }}">
-                </div>
-                <div class="content">
-                    <a id="id-{{ item.id }}" class="header">
-                        <i class="like icon"></i>
-                        {{ item.name }}
-                    </a>
-                    <div class="meta">
-                        <span class="price">Price: {{ item.price }}</span>
-                    </div>
-                    <div class="description">
-                        <p>{{ item.description }}</p>
-                    </div>
-
-                    {# show edit/delete only for user's items #}
-                    {% if user_id == item.user_id %}
-                        <div class="extra">
-
-                            <div class="ui negative right floated button delete">
-                                Delete
+                    <div class="item column">
+                        <div class="image">
+                            <img src="{{ url_for("static", filename="uploads/"+item.picture) if item.picture != none else url_for("static", filename="empty_img.png") }}">
+                        </div>
+                        <div class="content">
+                            <a id="id-{{ item.id }}" class="header">
+                                {{ item.name }}
+                            </a>
+                            <div class="meta">
+                                <span class="price">Price: {{ item.price }}</span>
+                            </div>
+                            <div class="description">
+                                <p>{{ item.description }}</p>
                             </div>
 
-                            <a href="{{ url_for("editItem", category_id=item.category_id, item_id=item.id) }}" class="ui positive right floated button">
-                                Edit
-                            </a>
+                            {# show edit/delete only for user's items #}
+                            {% if user_id == item.user_id %}
+                                <div class="extra">
+
+                                    <div class="ui negative right floated button delete">
+                                        Delete
+                                    </div>
+
+                                    <a href="{{ url_for("item_edit", category_id=item.category_id, item_id=item.id) }}"
+                                       class="ui positive right floated button">
+                                        Edit
+                                    </a>
+
+                                </div>
+                            {% endif %}
 
                         </div>
-                    {% endif %}
+                    </div>
 
-                </div>
+                {% endfor %}
             </div>
-
-        {% endfor %}
-    </div>
-
-</div>
-
-<!--  Modal with confirmation before deleting an item. Dynamically modified by jQuery -->
-<div class="ui basic modal">
-    <div class="ui icon header">
-        <i class="warning circle icon"></i>
-        Delete item
-    </div>
-    <div class="content">
-        <p class="modal-text"></p>
-    </div>
-    <div class="actions">
-        <div class="ui basic cancel inverted button">
-            <i class="remove icon"></i>
-            No
         </div>
-        <div class="ui red ok inverted button">
-            <i class="checkmark icon"></i>
-            Yes
+
+    </div>
+
+    <!--  Modal with confirmation before deleting an item. Dynamically modified by jQuery -->
+    <div class="ui basic modal">
+        <div class="ui icon header">
+            <i class="warning circle icon"></i>
+            Delete item
+        </div>
+        <div class="content">
+            <p class="modal-text"></p>
+        </div>
+        <div class="actions">
+            <div class="ui basic cancel inverted button">
+                <i class="remove icon"></i>
+                No
+            </div>
+            <div class="ui red ok inverted button">
+                <i class="checkmark icon"></i>
+                Yes
+            </div>
         </div>
     </div>
-</div>
 
-<script>
+    <script>
 
-    $('.ui.dropdown')
-        .dropdown();
+        $('.ui.dropdown')
+            .dropdown();
 
-    $('.button.delete').click(function () {
+        $('.button.delete').click(function () {
 
-        // get name of item from the item that triggered the modal
-        const name = $(this).parents('.content')
-            .find('.header')
-            .text()
-            .trim();
+            // get name of item from the item that triggered the modal
+            const name = $(this).parents('.content')
+                .find('.header')
+                .text()
+                .trim();
 
-        // get id of item stored in the DOM
-        const item_id = $(this).parents('.content')
-            .find('.header')
-            .attr('id')
-            .replace(/^\D+/g, '');
+            // get id of item stored in the DOM
+            const item_id = $(this).parents('.content')
+                .find('.header')
+                .attr('id')
+                .replace(/^\D+/g, '');
 
-        // get id of active category
-        const category_id = $('.category-id')
-            .attr('id')
-            .replace(/^\D+/g, '');
+            // get id of active category
+            const category_id = $('.category-id')
+                .attr('id')
+                .replace(/^\D+/g, '');
 
-        // assign new behaviour to delete button on modal - specify category and item to be deleted
-        $('.ui.red.ok.inverted.button').click(function () {
-            location.href = `http://${document.location.host}/category/${category_id}/item/${item_id}/delete/`;
-        });
+            // assign new behaviour to delete button on modal - specify category and item to be deleted
+            $('.ui.red.ok.inverted.button').click(function () {
+                location.href = `http://${document.location.host}/category/${category_id}/item/${item_id}/delete/`;
+            });
 
-        // modify text to correspond selected item
-        $('.modal-text').text(`Are you sure you want to delete an item named: "${name}"`);
-        $('.ui.basic.modal').modal('show');
-    })
+            // modify text to correspond selected item
+            $('.modal-text').text(`Are you sure you want to delete an item named: "${name}"`);
+            $('.ui.basic.modal').modal('show');
+        })
 
-</script>
+    </script>
 {% endblock %}
