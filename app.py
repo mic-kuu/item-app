@@ -527,7 +527,8 @@ def category_api(category_id):
         category = session.query(Category).filter_by(id=category_id).one()
 
     except NoResultFound:
-        return api_error("There is no category with id: %s. " % category_id)
+        return api_error("There is no category with id: %s. ".format(
+                category_id))
 
     if request.method == 'GET':
         items = session.query(Item).filter_by(category_id=category_id).all()
@@ -559,7 +560,8 @@ def category_api(category_id):
         session.commit()
 
         return api_success(
-                "Successfully modified category with id: %s." % category_id)
+                "Successfully modified category with id: {}.".format(
+                        category_id))
 
     if request.method == 'DELETE':
         items = session.query(Item).filter_by(category_id=category.id).all()
@@ -574,9 +576,8 @@ def category_api(category_id):
         session.commit()
 
         return api_success(
-                "Successfully deleted category with id: %s and it's all "
-                "items." %
-                category_id)
+                "Successfully deleted category with id: {} and it's all "
+                "items.".format(category_id))
 
 
 @app.route("/api/v1/category/<int:category_id>/item/<int:item_id>",
