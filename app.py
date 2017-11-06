@@ -6,7 +6,7 @@ import uuid
 
 import httplib2
 import requests
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask import make_response
 from flask import session as login_session
 from oauth2client.client import FlowExchangeError
@@ -16,8 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
-from database_setup import Base, Item, Category, User
-
+from database_setup import Base, Category, Item, User
 
 ##
 # APP-WIDE PARAMETERS
@@ -27,9 +26,8 @@ from database_setup import Base, Item, Category, User
 UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'ico'}
 CLIENT_ID = json.loads(
-    open('client_secret.json', 'r').read())['web']['client_id']
+        open('client_secret.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Item App Application"
-
 
 ##
 # FLASK INITIALIZATION
@@ -95,7 +93,8 @@ def process_user():
 
     :return: ID of the user
     """
-    user = session.query(User).filter_by(email=login_session['email']).one_or_none()
+    user = session.query(User).filter_by(
+            email=login_session['email']).one_or_none()
 
     if user is None:
         user = User(username=login_session['username'],
@@ -140,7 +139,9 @@ def page_not_found(e):
 
 @app.route('/login/')
 def login_view():
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+    state = ''.join(
+            random.choice(string.ascii_uppercase + string.digits) for x in
+            range(32))
     login_session['state'] = state
     return render_template('login.html', state=state)
 
@@ -167,7 +168,7 @@ def google_connect():
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
         response = make_response(
-            json.dumps('Failed to upgrade the authorization code.'), 401)
+                json.dumps('Failed to upgrade the authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -190,14 +191,14 @@ def google_connect():
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
         response = make_response(
-            json.dumps("Token's user ID doesn't match given user ID."), 401)
+                json.dumps("Token's user ID doesn't match user ID."), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Verify that the access token is valid for this app.
     if result['issued_to'] != CLIENT_ID:
         response = make_response(
-            json.dumps("Token's client ID does not match app's."), 401)
+                json.dumps("Token's client ID does not match app's."), 401)
         print("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -206,8 +207,9 @@ def google_connect():
     stored_gplus_id = login_session.get('gplus_id')
 
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+                json.dumps('Current user is already connected.'),
+                200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -240,11 +242,12 @@ def google_connect():
 def google_logout():
     access_token = login_session.get('access_token')
     if access_token is None:
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps('User not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    url = 'https://accounts.google.com/o/oauth2/revoke?token={}'.format(login_session['access_token'])
+    url = 'https://accounts.google.com/o/oauth2/revoke?token={}'.format(
+            login_session['access_token'])
 
     http = httplib2.Http()
     result = http.request(url, 'GET')[0]
@@ -257,10 +260,10 @@ def google_logout():
         del login_session['picture']
 
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(
+                json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Type'] = 'application/json'
-
 
     return redirect(url_for('login_view'))
 
@@ -296,7 +299,8 @@ def category_add():
             filename = secure_filename(picture.filename)
             extension = os.path.splitext(filename)[1]
             unique_filename = str(uuid.uuid4()) + str(extension)
-            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            picture.save(
+                    os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             new_category.picture = unique_filename
 
         session.add(new_category)
@@ -316,7 +320,8 @@ def category_edit(category_id):
 
     if request.method == 'POST':
 
-        edited_category = session.query(Category).filter_by(id=category_id).one()
+        edited_category = session.query(Category).filter_by(
+                id=category_id).one()
 
         edited_category.name = request.form['name']
         edited_category.description = request.form['description']
@@ -328,7 +333,8 @@ def category_edit(category_id):
             extension = os.path.splitext(filename)[1]
 
             unique_filename = str(uuid.uuid4()) + str(extension)
-            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            picture.save(
+                    os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
 
             delete_picture(edited_category.picture)
 
@@ -353,7 +359,8 @@ def category_delete(category_id):
         category = session.query(Category).filter_by(id=category_id).one()
 
     except NoResultFound:
-        return api_error("There is no category with id: {}.".format(category_id))
+        return api_error(
+                "There is no category with id: {}.".format(category_id))
 
     items = session.query(Item).filter_by(category_id=category.id).all()
 
@@ -410,27 +417,32 @@ def item_add(category_id=1):
             filename = secure_filename(picture.filename)
             extension = os.path.splitext(filename)[1]
             unique_filename = str(uuid.uuid4()) + str(extension)
-            picture.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            picture.save(
+                    os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
             new_item.picture = unique_filename
 
         session.add(new_item)
         session.commit()
 
-        return redirect(url_for('item_view', category_id=request.form['category-id']))
+        return redirect(
+                url_for('item_view', category_id=request.form['category-id']))
 
     else:
         categories = session.query(Category).all()
-        return render_template('add_item.html', categories=categories, category_id=category_id)
+        return render_template('add_item.html', categories=categories,
+                               category_id=category_id)
 
 
-@app.route('/category/<int:category_id>/item/<int:item_id>/edit/', methods=['GET', 'POST'])
+@app.route('/category/<int:category_id>/item/<int:item_id>/edit/',
+           methods=['GET', 'POST'])
 def item_edit(category_id, item_id):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
     if request.method == 'POST':
 
-        edited_item = session.query(Item).filter_by(category_id=category_id, id=item_id).one()
+        edited_item = session.query(Item).filter_by(category_id=category_id,
+                                                    id=item_id).one()
 
         edited_item.name = request.form['name']
         edited_item.price = request.form['price']
@@ -444,7 +456,8 @@ def item_edit(category_id, item_id):
             extension = os.path.splitext(filename)[1]
 
             unique_filename = str(uuid.uuid4()) + str(extension)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            file.save(
+                    os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
 
             delete_picture(edited_item.picture)
             edited_item.picture = unique_filename
@@ -452,12 +465,15 @@ def item_edit(category_id, item_id):
         session.add(edited_item)
         session.commit()
 
-        return redirect(url_for('item_view', category_id=request.form['category-id']))
+        return redirect(
+                url_for('item_view', category_id=request.form['category-id']))
 
     else:
         categories = session.query(Category).all()
-        edited_item = session.query(Item).filter_by(category_id=category_id, id=item_id).one()
-        return render_template('edit_item.html', categories=categories, category_id=category_id, item=edited_item)
+        edited_item = session.query(Item).filter_by(category_id=category_id,
+                                                    id=item_id).one()
+        return render_template('edit_item.html', categories=categories,
+                               category_id=category_id, item=edited_item)
 
 
 @app.route('/category/<int:category>/item/<int:item>/delete/')
@@ -465,7 +481,8 @@ def item_delete(category, item):
     if 'username' not in login_session:
         return redirect(url_for("login_view"))
 
-    item = session.query(Item).filter_by(id=item, category_id=category).one_or_none()
+    item = session.query(Item).filter_by(id=item,
+                                         category_id=category).one_or_none()
 
     if item:
         delete_picture(item.picture)
@@ -495,7 +512,8 @@ def categories_api():
     return jsonify(categories=json_data)
 
 
-@app.route("/api/v1/category/<int:category_id>", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/api/v1/category/<int:category_id>",
+           methods=['GET', 'PUT', 'DELETE'])
 def category_api(category_id):
     """
     Deals with all category (single category) endpoints.
@@ -540,7 +558,8 @@ def category_api(category_id):
         session.add(category)
         session.commit()
 
-        return api_success("Successfully modified category with id: %s." % category_id)
+        return api_success(
+                "Successfully modified category with id: %s." % category_id)
 
     if request.method == 'DELETE':
         items = session.query(Item).filter_by(category_id=category.id).all()
@@ -554,10 +573,14 @@ def category_api(category_id):
         session.delete(category)
         session.commit()
 
-        return api_success("Successfully deleted category with id: %s and it's all items." % category_id)
+        return api_success(
+                "Successfully deleted category with id: %s and it's all "
+                "items." %
+                category_id)
 
 
-@app.route("/api/v1/category/<int:category_id>/item/<int:item_id>", methods=['GET', 'PUT', 'DELETE'])
+@app.route("/api/v1/category/<int:category_id>/item/<int:item_id>",
+           methods=['GET', 'PUT', 'DELETE'])
 def item_api(category_id, item_id):
     """
     Deals with all item (single item) endpoints.
@@ -569,10 +592,13 @@ def item_api(category_id, item_id):
     :return: JSON message
     """
     try:
-        item = session.query(Item).filter_by(id=item_id, category_id=category_id).one()
+        item = session.query(Item).filter_by(id=item_id,
+                                             category_id=category_id).one()
 
     except NoResultFound:
-        return api_error("There is no item with id: {} in category with id: {}".format(item_id, category_id))
+        return api_error(
+                "There is no item with id: {} in category with id: {}".format(
+                        item_id, category_id))
 
     if request.method == 'GET':
         return jsonify(item=item.serialize)
@@ -582,7 +608,10 @@ def item_api(category_id, item_id):
 
         session.delete(item)
         session.commit()
-        return api_success("Successfully deleted item with id: {} from category id: {}.").format(item_id, category_id)
+        return api_success(
+                "Successfully deleted item with id: {} from category id: {"
+                "}.").format(
+                item_id, category_id)
 
     if request.method == 'PUT':
         request_json = request.get_json()
@@ -600,11 +629,14 @@ def item_api(category_id, item_id):
         session.add(item)
         session.commit()
 
-        return api_success("Successfully modified item with id: {} from category id: {}.".format(item_id, category_id))
+        return api_success(
+                "Successfully modified item with id: {} "
+                "from category id: {}.".format(item_id, category_id))
 
 
 if __name__ == "__main__":
-    # Note - for a production env change secret_key to a unique string and debug to False !
+    # Note - for a production env change secret_key to a unique string and
+    # debug to False!
     app.secret_key = "this_is_my_secret"
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
