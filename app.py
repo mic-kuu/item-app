@@ -24,7 +24,7 @@ from database_setup import Base, Category, Item, User
 
 
 UPLOAD_FOLDER = 'static/uploads/'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'ico'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'ico'}
 CLIENT_ID = json.loads(
         open('client_secret.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Item App Application"
