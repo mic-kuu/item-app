@@ -18,13 +18,22 @@ from werkzeug.utils import secure_filename
 
 from database_setup import Base, Item, Category, User
 
+
+##
 # APP-WIDE PARAMETERS
+##
+
+
 UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'ico'}
 CLIENT_ID = json.loads(
     open('client_secret.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Item App Application"
 
+
+##
+# FLASK INITIALIZATION
+##
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 engine = create_engine('sqlite:///itemsapp.db')
@@ -32,6 +41,11 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+
+##
+# HELPER FUNCTIONS
+##
 
 
 def allowed_file(filename):
@@ -230,7 +244,7 @@ def google_logout():
         response.headers['Content-Type'] = 'application/json'
         return response
 
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token={}'.format(login_session['access_token'])
 
     http = httplib2.Http()
     result = http.request(url, 'GET')[0]
@@ -249,6 +263,11 @@ def google_logout():
 
 
     return redirect(url_for('login_view'))
+
+
+##
+# CATEGORY VIEWS
+##
 
 
 @app.route('/')
@@ -323,6 +342,37 @@ def category_edit(category_id):
     else:
         category = session.query(Category).filter_by(id=category_id).one()
         return render_template('edit_category.html', category=category)
+
+
+@app.route('/category/<int:category_id>/delete/')
+def category_delete(category_id):
+    if 'username' not in login_session:
+        return redirect(url_for("login_view"))
+
+    try:
+        category = session.query(Category).filter_by(id=category_id).one()
+
+    except NoResultFound:
+        return api_error("There is no category with id: {}.".format(category_id))
+
+    items = session.query(Item).filter_by(category_id=category.id).all()
+
+    # delete all pictures - for items in category and for category
+    for item in items:
+        delete_picture(item.picture)
+        session.delete(item)
+
+    delete_picture(category.picture)
+
+    session.delete(category)
+    session.commit()
+
+    return redirect(url_for('category_view'))
+
+
+##
+# ITEM VIEWS
+##
 
 
 @app.route('/category/<int:category_id>/')
@@ -421,30 +471,9 @@ def item_delete(category, item):
     return redirect(url_for('item_view', category_id=category))
 
 
-@app.route('/category/<int:category_id>/delete/')
-def category_delete(category_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
-    try:
-        category = session.query(Category).filter_by(id=category_id).one()
-
-    except NoResultFound:
-        return api_error("There is no category with id: {}.".format(category_id))
-
-    items = session.query(Item).filter_by(category_id=category.id).all()
-
-    # delete all pictures - for items in category and for category
-    for item in items:
-        delete_picture(item.picture)
-        session.delete(item)
-
-    delete_picture(category.picture)
-
-    session.delete(category)
-    session.commit()
-
-    return redirect(url_for('category_view'))
+##
+# API HANDLERS
+##
 
 
 @app.route("/api/v1/categories/")
