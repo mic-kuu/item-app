@@ -23,18 +23,17 @@
 
 <div class="whole-page">
     <div class="ui raised very padded text container center aligned clearing segment">
-        <h2 class="ui header">Welcome to Item App page</h2>
-        <h4>Please log in (or register) using your google account.</h4>
+        <h2 class="ui header">Welcome to Item App log in page</h2>
+        <h4>Please authenticate using your google account.</h4>
 
         <div id="signinButton">
           <span class="g-signin"
                 data-scope="openid email"
-                data-clientid="806926172667-eqeklcs51c0m8f80jgjl0r3iiqsq5prm.apps.googleusercontent.com"
+                data-clientid="{{ client_id }}"
                 data-redirecturi="postmessage"
                 data-accesstype="offline"
                 data-cookiepolicy="single_host_origin"
-                data-callback="onSuccess"
-                data-approvalprompt="force">
+                data-callback="onSuccess" >
           </span>
         </div>
 

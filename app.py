@@ -7,8 +7,9 @@ import uuid
 import httplib2
 import requests
 from flask import Flask, jsonify, redirect, render_template, request, url_for
-from flask import make_response
+from flask import g, make_response
 from flask import session as login_session
+from flask_httpauth import HTTPBasicAuth
 from oauth2client.client import FlowExchangeError
 from oauth2client.client import flow_from_clientsecrets
 from sqlalchemy import create_engine
@@ -16,8 +17,9 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.exc import NoResultFound
 from werkzeug.utils import secure_filename
 
-from database_setup import Base, Category, Item, User
+from model import Base, Category, Item, User
 
+auth = HTTPBasicAuth()
 ##
 # APP-WIDE PARAMETERS
 ##
@@ -49,6 +51,7 @@ session = DBSession()
 def allowed_file(filename):
     """
     A helper function determining if user selected allowed picture extension
+
     :param filename: filename (name.extension)
     :return: True if extension is allowed
     """
@@ -71,6 +74,7 @@ def delete_picture(filename):
 def api_error(message):
     """
     A helper function returning API error message
+
     :param message: Error message
     :return: JSON string
     """
@@ -80,13 +84,14 @@ def api_error(message):
 def api_success(message):
     """
     A helper function returning API success message
+
     :param message: Success message
     :return: JSON string
     """
     return jsonify({"success": message})
 
 
-def process_user():
+def get_logged_user():
     """
     Process user that was authorized with Google. If user exists in DB
     returns it's id. If there is no user - creates a new one.
@@ -107,17 +112,46 @@ def process_user():
     return user.id
 
 
+@auth.verify_password
+def verify_api_credentials(token, password):
+    """
+    Treats Basic Auth name as token. Returns True if auth token is OK.
+    Password is not used in this case, so it's left empty. Password argument is
+    required for @auth.verify_password.
+
+    :param token: Token from Basic Auth 'name' field.
+    :return: True if authenticated.
+    """
+    user_id = User.verify_auth_token(token)
+
+    if not user_id:
+        return False
+    else:
+        return True
+
+
+@app.route('/token')
+def get_auth_token():
+    if 'username' not in login_session:
+        return redirect(url_for("login_view"))
+
+    user = session.query(User).filter_by(id=login_session['user_id']).one()
+    token = user.generate_auth_token()
+    return jsonify({'token': token.decode('ascii')})
+
+
 @app.context_processor
 def inject_user():
     """
     Adds context to the Jinija template. Returned variables are accessible
     in Jinija templates.
+
     :return: Variables from the returned dict will be accessible template.
     """
 
-    user_name = "None"
-    user_pic = "?"
-    user_id = 0
+    user_name = "Anonymus"
+    user_pic = ""
+    user_id = 0  # super admin id
 
     if 'username' in login_session:
         user_name = login_session['username']
@@ -128,7 +162,15 @@ def inject_user():
     if 'user_id' in login_session:
         user_id = login_session['user_id']
 
-    return dict(user_name=user_name, user_pic=user_pic, user_id=user_id)
+    try:
+        user = session.query(User).filter_by(id=user_id).one()
+        g.user = user
+
+    except:
+        pass
+
+    return dict(user_name=user_name, user_pic=user_pic, user_id=user_id,
+                client_id=CLIENT_ID)
 
 
 @app.errorhandler(404)
@@ -150,6 +192,7 @@ def login_view():
 def google_connect():
     """
     Authorizes app with Google Sign-In
+
     :return: Google Response
     """
 
@@ -229,7 +272,7 @@ def google_connect():
     login_session['email'] = data['email']
 
     # email has to be unique - so create a new user if email is not in DB
-    user_id = process_user()
+    user_id = get_logged_user()
     login_session['user_id'] = user_id
 
     response = make_response(json.dumps('Successfuly logged in.'), 200)
@@ -252,16 +295,15 @@ def google_logout():
     http = httplib2.Http()
     result = http.request(url, 'GET')[0]
 
-    if result['status'] == '200':
-        del login_session['access_token']
-        del login_session['gplus_id']
-        del login_session['username']
-        del login_session['email']
-        del login_session['picture']
+    del login_session['access_token']
+    del login_session['gplus_id']
+    del login_session['username']
+    del login_session['email']
+    del login_session['picture']
 
-    else:
+    if result['status'] != '200':
         response = make_response(
-                json.dumps('Failed to revoke token for given user.', 400))
+                json.dumps('Failed to revoke token for given user.'))
         response.headers['Content-Type'] = 'application/json'
         response.headers['Content-Type'] = 'application/json'
 
@@ -496,8 +538,8 @@ def item_delete(category, item):
 # API HANDLERS
 ##
 
-
 @app.route("/api/v1/categories/")
+@auth.login_required
 def categories_api():
     """
     Gets list of all categories - similar to category_view
@@ -514,12 +556,14 @@ def categories_api():
 
 @app.route("/api/v1/category/<int:category_id>",
            methods=['GET', 'PUT', 'DELETE'])
+@auth.login_required
 def category_api(category_id):
     """
     Deals with all category (single category) endpoints.
     GET - gets JSON description of category
     PUT - modifies chosen category
     DELETE - deletes chosen category
+
     :param category_id: id of the category, fetched from URL request
     :return: JSON message
     """
@@ -582,12 +626,14 @@ def category_api(category_id):
 
 @app.route("/api/v1/category/<int:category_id>/item/<int:item_id>",
            methods=['GET', 'PUT', 'DELETE'])
+@auth.login_required
 def item_api(category_id, item_id):
     """
     Deals with all item (single item) endpoints.
     GET - gets JSON description of item
     PUT - modifies chosen item
     DELETE - deletes chosen item
+
     :param category_id: id of the category, fetched from URL request
     :param item_id: id of the item, fetched from URL request
     :return: JSON message

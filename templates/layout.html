@@ -2,67 +2,75 @@
 <html lang="en">
 <head>
     {% block head %}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
-    <link rel="stylesheet" href="{{ url_for("static", filename="main.css") }}"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}{% endblock %}</title>
+        <link rel="stylesheet"
+              href="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.css">
+        <link rel="stylesheet"
+              href="{{ url_for("static", filename="main.css") }}">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script
-            src="https://code.jquery.com/jquery-3.2.1.min.js"
-            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
-            crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
+        <script
+                src="https://code.jquery.com/jquery-3.2.1.min.js"
+                integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+                crossorigin="anonymous">
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.2.13/dist/semantic.min.js"></script>
     {% endblock %}
 </head>
 <body class="site">
+
 <div class="site-content">
-<div class="ui large main menu">
+    <div class="ui large main menu">
 
-    <a href="{{ url_for("category_view") }}" class="header item">
-        <img src="{{ url_for("static", filename="logo.png") }}">
-    </a>
+        <a href="{{ url_for("category_view") }}" class="header item">
+            <img src="{{ url_for("static", filename="logo.png") }}">
+        </a>
 
 
-
-    <div class="right menu">
-        <div class="ui dropdown item">
-            <i class="wrench icon"></i>
-            Actions
-            <div class="menu">
-                {# Set category id if present (only when viewing category) so appropriate category is selected #}
-                <a href="{{ url_for("item_add", category_id=category.id) if category else url_for("item_add", category_id=1) }}" class="item">Add item</a>
-                <a href="{{ url_for("category_add") }}" class="item">Add category</a>
-                <a href="{{ url_for("category_view") }}" class="item">Main menu</a>
-            </div>
-        </div>
-
-        <div class="item">
-            <div class="content padded">
-                <div class="header">Welcome <strong>{{ user_name }}</strong>!</div>
-                <div class="meta">
-                    <span class="logout">Not you? <a href="{{ url_for("google_logout") }}">Log out</a></span>
+        <div class="right menu">
+            <div class="ui dropdown item">
+                <i class="wrench icon"></i>
+                Actions
+                <div class="menu">
+                    {# Set category id if present (only when viewing category) so appropriate category is selected #}
+                    <a href="{{ url_for("item_add", category_id=category.id) if category else url_for("item_add", category_id=1) }}"
+                       class="item">Add item</a>
+                    <a href="{{ url_for("category_add") }}" class="item">Add
+                        category</a>
+                    <a href="{{ url_for("category_view") }}" class="item">Main
+                        menu</a>
                 </div>
             </div>
 
-            <div class="ui circular mini spaced image">
-                <img src="{{ user_pic }}">
+            <div class="item">
+                <div class="content padded">
+                    <div class="header">Welcome <strong>{{ user_name }}</strong>!
+                    </div>
+                    <div class="meta">
+                        <span class="logout">Not you? <a
+                                href="{{ url_for("google_logout") }}">Log out</a></span>
+                    </div>
+                </div>
+
+                <div class="ui circular mini spaced image">
+                    <img src="{{ user_pic }}">
+                </div>
             </div>
+
         </div>
 
     </div>
 
-</div>
 
-
-{% block content %}
-{% endblock %}
+    {% block content %}
+    {% endblock %}
 </div>
 <footer class="ui vertical padded footer segment">
-  <div class="ui right aligned container">
-    Michał Kubiak 2017. All Rights Reserved
-  </div>
+    <div class="ui right aligned container">
+        Michał Kubiak 2017. All Rights Reserved
+    </div>
 </footer>
 
 </body>

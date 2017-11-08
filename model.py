@@ -1,15 +1,19 @@
+import random
+import string
+
+from itsdangerous import BadSignature, SignatureExpired, \
+    TimedJSONWebSignatureSerializer as Serializer
 from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
-from passlib.apps import custom_app_context as pwd_context
-
-from sqlalchemy import create_engine
-
 
 ##
 # MODEL DECLARATION (SQL ALCHEMY SETUP)
 ##
 
+SECRET_KEY = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                     for x in range(32))
 
 Base = declarative_base()
 
@@ -19,11 +23,26 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(32), index=True)
     email = Column(String(128), unique=True)
-    password_hash = Column(String(64))
     picture = Column(String(1024))
 
-    def hash_password(self, password):
-        self.password_hash = pwd_context.encrypt(password)
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(SECRET_KEY, expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(SECRET_KEY)
+
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            # Expired token
+            return None
+        except BadSignature:
+            # Invalid Token
+            return None
+        user_id = data['id']
+        return user_id
 
 
 class Category(Base):
