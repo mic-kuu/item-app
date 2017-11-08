@@ -1,6 +1,6 @@
 # Project4: Item App 
 This project is a result of Udcaity's Fullstack Developer Nanodegree assginment. The main goal was to prepare an Flask backend app for an Item Catalogue app with whole CRUD and external authentication.
-![mic-kuu's item app catalogue view](https://i.imgur.com/XDixFlO.png)
+![mic-kuu's item app catalogue view](https://i.imgur.com/wiF6g0E.jpg)
 ## Overview
 The application is written using python *Flask* framework in *python3.5.2*. It consists of web interface for browsing the catalogue of items 
 and respective API endpoints. Data persistance is deliverd with *SQLite* database (*SQLAlchemy* on backend site). The frontend side of 
