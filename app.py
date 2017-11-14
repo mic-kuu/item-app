@@ -3,10 +3,12 @@ import os
 import random
 import string
 import uuid
+from functools import wraps
 
 import httplib2
 import requests
 from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import flash
 from flask import g, make_response
 from flask import session as login_session
 from flask_httpauth import HTTPBasicAuth
@@ -112,6 +114,21 @@ def get_logged_user():
     return user.id
 
 
+def login_protected(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        '''
+        Decorator that checks if user is logged in and redirects to login
+        page if not.
+        '''
+        if 'username' in login_session:
+            return f(*args, **kwargs)
+        else:
+            return redirect(url_for("login_view"))
+
+    return decorated_function
+
+
 @auth.verify_password
 def verify_api_credentials(token, password):
     """
@@ -131,11 +148,14 @@ def verify_api_credentials(token, password):
 
 
 @app.route('/token')
+@login_protected
 def get_auth_token():
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
+    try:
+        user = session.query(User).filter_by(id=login_session['user_id']).one()
+    except NoResultFound:
+        # unexpected situation - login one more time
+        redirect(url_for("login_view"))
 
-    user = session.query(User).filter_by(id=login_session['user_id']).one()
     token = user.generate_auth_token()
     return jsonify({'token': token.decode('ascii')})
 
@@ -316,19 +336,15 @@ def google_logout():
 
 
 @app.route('/')
+@login_protected
 def category_view():
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
     categories = session.query(Category).all()
     return render_template('view_category.html', categories=categories)
 
 
 @app.route('/category/add', methods=['GET', 'POST'])
+@login_protected
 def category_add():
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
     if request.method == 'POST':
 
         new_category = Category(name=request.form['name'],
@@ -356,14 +372,23 @@ def category_add():
 
 
 @app.route('/category/<int:category_id>/edit/', methods=['GET', 'POST'])
+@login_protected
 def category_edit(category_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
+    # check if exists
+    try:
+        edited_category = session.query(Category).filter_by(
+            id=category_id).one()
+    except NoResultFound:
+        flash("There is no category with id {}".format(category_id))
+        return redirect(url_for("category_view"))
+
+    # check if authorized
+    if edited_category.user_id is not login_session['user_id']:
+        flash("You are not authorized to edit category with id:{}."
+              .format(category_id))
+
 
     if request.method == 'POST':
-
-        edited_category = session.query(Category).filter_by(
-                id=category_id).one()
 
         edited_category.name = request.form['name']
         edited_category.description = request.form['description']
@@ -388,32 +413,35 @@ def category_edit(category_id):
         return redirect(url_for('category_view'))
 
     else:
-        category = session.query(Category).filter_by(id=category_id).one()
-        return render_template('edit_category.html', category=category)
+        return render_template('edit_category.html', category=edited_category)
 
 
 @app.route('/category/<int:category_id>/delete/')
+@login_protected
 def category_delete(category_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
     try:
-        category = session.query(Category).filter_by(id=category_id).one()
+        deleted_category = session.query(Category).filter_by(id=category_id).one()
 
     except NoResultFound:
         return api_error(
                 "There is no category with id: {}.".format(category_id))
 
-    items = session.query(Item).filter_by(category_id=category.id).all()
+    # check if authorized
+    if deleted_category.user_id is not login_session['user_id']:
+        flash("You are not authorized to edit category with id:{}."
+              .format(category_id))
+        return redirect(url_for("category_view"))
+
+    items = session.query(Item).filter_by(category_id=deleted_category.id).all()
 
     # delete all pictures - for items in category and for category
     for item in items:
         delete_picture(item.picture)
         session.delete(item)
 
-    delete_picture(category.picture)
+    delete_picture(deleted_category.picture)
 
-    session.delete(category)
+    session.delete(deleted_category)
     session.commit()
 
     return redirect(url_for('category_view'))
@@ -425,10 +453,8 @@ def category_delete(category_id):
 
 
 @app.route('/category/<int:category_id>/')
+@login_protected
 def item_view(category_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
     try:
         category = session.query(Category).filter_by(id=category_id).one()
     except NoResultFound:
@@ -441,10 +467,8 @@ def item_view(category_id):
 
 @app.route('/item/add/', methods=['GET', 'POST'])
 @app.route('/category/<int:category_id>/item/add', methods=['GET', 'POST'])
+@login_protected
 def item_add(category_id=1):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
     if request.method == 'POST':
 
         new_item = Item(name=request.form['name'],
@@ -477,14 +501,24 @@ def item_add(category_id=1):
 
 @app.route('/category/<int:category_id>/item/<int:item_id>/edit/',
            methods=['GET', 'POST'])
+@login_protected
 def item_edit(category_id, item_id):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
-
-    if request.method == 'POST':
-
+    # Check if category exists
+    try:
         edited_item = session.query(Item).filter_by(category_id=category_id,
                                                     id=item_id).one()
+    except NoResultFound:
+        flash("There is no item with id:{} in category:{} to edit!") \
+            .format(item_id, category_id)
+        return redirect(url_for("item_view"))
+
+    # check if authorized
+    if edited_item.user_id is not login_session['user_id']:
+        flash("You are not authorized to edit item id:{}."
+              .format(category_id))
+        return redirect(url_for('item_view', category_id=category_id))
+
+    if request.method == 'POST':
 
         edited_item.name = request.form['name']
         edited_item.price = request.form['price']
@@ -512,26 +546,33 @@ def item_edit(category_id, item_id):
 
     else:
         categories = session.query(Category).all()
-        edited_item = session.query(Item).filter_by(category_id=category_id,
-                                                    id=item_id).one()
         return render_template('edit_item.html', categories=categories,
                                category_id=category_id, item=edited_item)
 
 
-@app.route('/category/<int:category>/item/<int:item>/delete/')
-def item_delete(category, item):
-    if 'username' not in login_session:
-        return redirect(url_for("login_view"))
+@app.route('/category/<category_id>/item/<item_id>/delete/')
+@login_protected
+def item_delete(category_id, item_id):
+    try:
+        deleted_item = session.query(Item).filter_by(id=item_id,
+                                                category_id=category_id).one()
+    except NoResultFound:
+        flash("There is no item with id {}.").format(category_id)
+        return redirect(url_for('item_view', category_id=category_id))
 
-    item = session.query(Item).filter_by(id=item,
-                                         category_id=category).one_or_none()
+    # check if authorized
+    if deleted_item.user_id is not login_session['user_id']:
+        flash("You are not authorized to delete item with id:{}."
+              .format(category_id))
+        return redirect(url_for('item_view', category_id=category_id))
 
-    if item:
-        delete_picture(item.picture)
-        session.delete(item)
+
+    if deleted_item:
+        delete_picture(deleted_item.picture)
+        session.delete(deleted_item)
         session.commit()
 
-    return redirect(url_for('item_view', category_id=category))
+    return redirect(url_for('item_view', category_id=category_id))
 
 
 ##
