@@ -67,6 +67,14 @@ Finally, you can run your server using the command below:
 python3 app.py
 ```
 
+### API
+The app contains API that allows seeing information just like in the GUI. Here is the list o avaliable endopints:
+* /api/v1/categories/ (GET)
+* /api/v1/category/<int:category_id> (GET, PUT, DELETE)
+* /api/v1/category/<int:category_id>/item/<int:item_id> (GET, PUT, DELETE)
+
+In order to authenticate to API you need to generate an access token. After you've logged in go to "Actions" button in the upper toolbar and select "API token" from the drop down menu. You'll get an access token. Use it as username in HTTP Basic Auth. Leave password blank.
+
 ## Contributions
 Special thanks to:
 * [Semantic UI](https://semantic-ui.com/) - for an awesome CSS framework
